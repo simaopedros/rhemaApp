@@ -47,14 +47,18 @@ export const feedRoutes = new Elysia({ prefix: '/feed' })
                 if (user?.vector) {
                     // Busca vetorial (RAG/Recomendação)
                     // Encontra vídeos mais próximos do vetor do usuário
-                    // Exclui vídeos já vistos (MVP: ignora exclusion por performance agora ou usa NOT IN)
                     const vectorStr = user.vector; // Já vem formatado do banco
+
+                    // Configurar probes para melhor precisão com índice IVFFlat
+                    // Mais probes = mais preciso, porém mais lento (10 é bom equilíbrio)
+                    await prisma.$executeRawUnsafe(`SET ivfflat.probes = 10;`);
 
                     // Ajuste: Prisma Raw retorna array de objetos
                     const recs = await prisma.$queryRawUnsafe<any[]>(
                         `SELECT id FROM videos 
                          WHERE status = 'READY' 
-                         AND type = 'SHORT' 
+                         AND type = 'SHORT'
+                         AND embedding IS NOT NULL
                          ORDER BY embedding <=> '${vectorStr}'::vector ASC 
                          LIMIT ${limit} OFFSET ${skip}`
                     );

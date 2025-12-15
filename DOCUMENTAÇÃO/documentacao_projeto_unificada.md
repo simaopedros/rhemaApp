@@ -264,7 +264,7 @@ Este arquivo contém todas as etapas detalhadas para o desenvolvimento do projet
 - [x] **Endpoint de Feed Inteligente**
     - [x] Implementar query raw com Prisma (`ORDER BY embedding <=> user_vector`)
     - [x] Tabs "Sugeridos" (IA) vs "Seguindo" (cronológico)
-    - [ ] Otimizar indexação no Postgres (IVFFlat)
+    - [x] Otimizar indexação no Postgres (IVFFlat)
 
 ## FASE 5: Desenvolvimento Mobile (Flutter)
 - [x] **Estrutura Base**
