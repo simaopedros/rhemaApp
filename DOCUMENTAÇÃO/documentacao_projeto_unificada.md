@@ -284,6 +284,7 @@ Este arquivo contém todas as etapas detalhadas para o desenvolvimento do projet
     - [x] Overlay de informações (Título, User, Ações)
     - [x] Conectar ao endpoint `GET /feed`
     - [x] Fallback para Mock Data se offline
+    - [x] **Pré-carregamento de Vídeos** (próximos 2 vídeos carregados em background para reprodução instantânea)
 - [x] **Upload de Vídeo**
     - [x] Seleção de arquivo da galeria
     - [x] **Gravação de Vídeo (Câmera)**
@@ -310,7 +311,7 @@ Este arquivo contém todas as etapas detalhadas para o desenvolvimento do projet
 - [ ] **Testes & QA**
     - [ ] Teste de Carga no Backend
     - [ ] Teste de Usabilidade no App
-    - [ ] Correção de Bugs (Scroll, Performance de Vídeo)
+    - [x] **Performance de Vídeo** (Preload implementado - reprodução instantânea ao deslizar)
 
 ## FASE 9: Sistema de Publicidade (Ads Lite)(Gerenciamento de Anúncios Apenas Web)
 - [ ] **Backoffice de Anunciantes**
