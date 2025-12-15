@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:rhema_app/features/feed/data/models/video_model.dart';
 import 'package:rhema_app/core/theme/app_theme.dart';
+import 'package:rhema_app/features/feed/data/services/video_preload_service.dart';
 import 'package:video_player/video_player.dart';
 import 'dart:math' as math;
 
@@ -35,12 +36,11 @@ class VideoCard extends StatefulWidget {
 
 class _VideoCardState extends State<VideoCard> with TickerProviderStateMixin {
   late AnimationController _heartController;
+  final VideoPreloadService _preloadService = VideoPreloadService();
   VideoPlayerController? _videoController;
   bool _isInitialized = false;
   bool _showDoubleTapHeart = false;
   
-  // Radial Menu State
-
 
   @override
   void initState() {
@@ -62,37 +62,42 @@ class _VideoCardState extends State<VideoCard> with TickerProviderStateMixin {
       if (widget.isActive) {
         _initializeVideo();
       } else {
+        // Pausar quando sair da tela
         _videoController?.pause();
       }
     }
   }
 
   Future<void> _initializeVideo() async {
-    if (_videoController != null && _videoController!.dataSource == widget.video.videoUrl) {
-      // Já inicializado com o mesmo vídeo, apenas play
-      if (!_videoController!.value.isPlaying) {
-        _videoController?.play();
+    final url = widget.video.videoUrl;
+    
+    // Tentar obter do cache (já pré-carregado)
+    final cachedController = _preloadService.getCachedController(url);
+    
+    if (cachedController != null && cachedController.value.isInitialized) {
+      // Cache HIT - reprodução instantânea!
+      if (mounted) {
+        setState(() {
+          _videoController = cachedController;
+          _isInitialized = true;
+        });
+        // Reset e play
+        await cachedController.seekTo(Duration.zero);
+        cachedController.play();
       }
       return;
     }
-
-    _disposeVideo(); // Limpar anterior
-
-    // Criar novo controller
-    _videoController = VideoPlayerController.networkUrl(
-      Uri.parse(widget.video.videoUrl),
-      videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
-    );
-
+    
+    // Cache MISS - carregar normalmente
     try {
-      await _videoController!.initialize();
-      _videoController!.setLooping(true);
-      if (mounted) {
+      final controller = await _preloadService.getController(url);
+      if (controller != null && mounted) {
         setState(() {
+          _videoController = controller;
           _isInitialized = true;
         });
         if (widget.isActive) {
-          _videoController!.play();
+          controller.play();
         }
       }
     } catch (e) {
@@ -100,16 +105,10 @@ class _VideoCardState extends State<VideoCard> with TickerProviderStateMixin {
     }
   }
 
-  void _disposeVideo() {
-    _videoController?.dispose();
-    _videoController = null;
-    _isInitialized = false;
-  }
-
   @override
   void dispose() {
     _heartController.dispose();
-    _disposeVideo();
+    // NÃO dispose do controller aqui - ele é gerenciado pelo PreloadService
     super.dispose();
   }
 

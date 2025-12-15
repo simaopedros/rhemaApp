@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rhema_app/core/theme/app_theme.dart';
 import 'package:rhema_app/features/feed/data/models/video_model.dart';
+import 'package:rhema_app/features/feed/data/services/video_preload_service.dart';
 import 'package:rhema_app/features/feed/presentation/providers/feed_provider.dart';
 import 'package:rhema_app/features/feed/presentation/widgets/video_card.dart';
 import 'package:rhema_app/features/feed/presentation/screens/video_detail_screen.dart';
@@ -24,6 +25,7 @@ class FeedScreen extends ConsumerStatefulWidget {
 
 class _FeedScreenState extends ConsumerState<FeedScreen> {
   final PageController _pageController = PageController();
+  final VideoPreloadService _preloadService = VideoPreloadService();
   FeedType _feedType = FeedType.sugeridos;
   int _currentIndex = 0;
   bool _showComments = false;
@@ -39,9 +41,33 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   @override
   void dispose() {
     _pageController.dispose();
+    // Limpar cache de vídeos ao sair da tela
+    _preloadService.disposeAll();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
         overlays: SystemUiOverlay.values);
     super.dispose();
+  }
+
+  /// Pré-carrega os próximos vídeos para reprodução instantânea
+  void _preloadNextVideos(List<VideoModel> videos, int currentIndex) {
+    final urlsToPreload = <String>[];
+    
+    // Pré-carregar os próximos 2 vídeos
+    for (int i = 1; i <= 2; i++) {
+      final nextIndex = currentIndex + i;
+      if (nextIndex < videos.length) {
+        urlsToPreload.add(videos[nextIndex].videoUrl);
+      }
+    }
+    
+    // Também pré-carregar o vídeo anterior (para swipe back)
+    if (currentIndex > 0) {
+      urlsToPreload.add(videos[currentIndex - 1].videoUrl);
+    }
+    
+    if (urlsToPreload.isNotEmpty) {
+      _preloadService.preloadVideos(urlsToPreload);
+    }
   }
 
   void _toggleLike(VideoModel video) {
@@ -84,12 +110,20 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 );
               }
 
+              // Pré-carregar os primeiros vídeos na inicialização
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _preloadNextVideos(videos, _currentIndex);
+              });
+
               return PageView.builder(
                 controller: _pageController,
                 scrollDirection: Axis.horizontal,
                 itemCount: videos.length,
                 onPageChanged: (index) {
                   setState(() => _currentIndex = index);
+                  
+                  // Pré-carregar próximos vídeos para reprodução instantânea
+                  _preloadNextVideos(videos, index);
                   
                   // Carregar mais vídeos ao chegar perto do fim
                   if (index >= videos.length - 2) {
