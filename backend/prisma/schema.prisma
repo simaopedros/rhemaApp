@@ -1,0 +1,296 @@
+// Schema Prisma para PostgreSQL com pgvector
+// RHEMA - Plataforma Social de Vídeos
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
+}
+
+// ============================================
+// USUÁRIOS
+// ============================================
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  googleId        String?   @unique @map("google_id")
+  name            String
+  handle          String    @unique
+  avatar          String?
+  bio             String?
+  followersCount  Int       @default(0) @map("followers_count")
+  followingCount  Int       @default(0) @map("following_count")
+  isVerified      Boolean   @default(false) @map("is_verified")
+  interestVector  Unsupported("vector(384)")? @map("interest_vector")
+  
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  // Relationships
+  videos          Video[]
+  interactions    Interaction[]
+  comments        Comment[]
+  followers       Follow[]  @relation("Following")
+  following       Follow[]  @relation("Followers")
+
+  @@map("users")
+}
+
+// ============================================
+// VÍDEOS
+// ============================================
+
+enum VideoType {
+  SHORT
+  LONG
+}
+
+enum VideoStatus {
+  UPLOADING
+  PROCESSING
+  READY
+  FAILED
+}
+
+model Video {
+  id              String      @id @default(cuid())
+  userId          String      @map("user_id")
+  type            VideoType   @default(SHORT)
+  status          VideoStatus @default(UPLOADING)
+  
+  // Bunny.net
+  bunnyVideoId    String?     @map("bunny_video_id")
+  videoUrl        String?     @map("video_url")
+  thumbnailUrl    String?     @map("thumbnail_url")
+  hlsUrl          String?     @map("hls_url")
+  
+  // Metadata
+  title           String?
+  description     String?
+  tags            String[]
+  duration        Int?        // Duração em segundos
+  
+  // Counters
+  likesCount      Int         @default(0) @map("likes_count")
+  commentsCount   Int         @default(0) @map("comments_count")
+  sharesCount     Int         @default(0) @map("shares_count")
+  viewsCount      Int         @default(0) @map("views_count")
+  
+  // Recommendation
+  embedding       Unsupported("vector(384)")? 
+  score           Float       @default(0) // Pontuação para ranking
+  
+  // Vídeo Original (para shorts gerados por corte automático)
+  parentVideoId   String?     @map("parent_video_id")
+  parentVideo     Video?      @relation("VideoClips", fields: [parentVideoId], references: [id])
+  clips           Video[]     @relation("VideoClips")
+  
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  // Relationships
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  interactions    Interaction[]
+  comments        Comment[]
+
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+  @@index([score(sort: Desc)])
+  @@map("videos")
+}
+
+// ============================================
+// INTERAÇÕES
+// ============================================
+
+enum InteractionType {
+  VIEW
+  LIKE
+  SHARE
+  SAVE
+}
+
+model Interaction {
+  id              String          @id @default(cuid())
+  userId          String          @map("user_id")
+  videoId         String          @map("video_id")
+  type            InteractionType
+  watchTime       Int?            @map("watch_time") // Tempo assistido em segundos
+  completionRate  Float?          @map("completion_rate") // % do vídeo assistido
+  
+  createdAt       DateTime        @default(now()) @map("created_at")
+
+  // Relationships
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video           Video           @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, videoId, type])
+  @@index([videoId])
+  @@index([userId])
+  @@map("interactions")
+}
+
+// ============================================
+// COMENTÁRIOS
+// ============================================
+
+model Comment {
+  id              String    @id @default(cuid())
+  userId          String    @map("user_id")
+  videoId         String    @map("video_id")
+  text            String
+  likesCount      Int       @default(0) @map("likes_count")
+  
+  // Nested comments
+  parentId        String?   @map("parent_id")
+  parent          Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies         Comment[] @relation("CommentReplies")
+  
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  // Relationships
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video           Video     @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@index([videoId])
+  @@index([userId])
+  @@map("comments")
+}
+
+// ============================================
+// SEGUIR/SEGUIDORES
+// ============================================
+
+model Follow {
+  id              String    @id @default(cuid())
+  followerId      String    @map("follower_id")
+  followingId     String    @map("following_id")
+  
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  follower        User      @relation("Followers", fields: [followerId], references: [id], onDelete: Cascade)
+  following       User      @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@map("follows")
+}
+
+// ============================================
+// SISTEMA DE PUBLICIDADE (ADS)
+// ============================================
+
+enum AdAccountStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING
+}
+
+model AdAccount {
+  id              String          @id @default(cuid())
+  userId          String          @unique @map("user_id")
+  balance         Float           @default(0)
+  status          AdAccountStatus @default(PENDING)
+  
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  
+  campaigns       AdCampaign[]
+
+  @@map("ad_accounts")
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+}
+
+model AdCampaign {
+  id              String          @id @default(cuid())
+  accountId       String          @map("account_id")
+  name            String
+  dailyBudget     Float           @map("daily_budget")
+  totalSpent      Float           @default(0) @map("total_spent")
+  status          CampaignStatus  @default(DRAFT)
+  targetVector    Unsupported("vector(384)")? @map("target_vector")
+  targetDescription String?       @map("target_description")
+  
+  startDate       DateTime?       @map("start_date")
+  endDate         DateTime?       @map("end_date")
+  
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  
+  account         AdAccount       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  creatives       AdCreative[]
+  impressions     AdImpression[]
+
+  @@map("ad_campaigns")
+}
+
+model AdCreative {
+  id              String        @id @default(cuid())
+  campaignId      String        @map("campaign_id")
+  videoUrl        String        @map("video_url")
+  title           String
+  actionLink      String?       @map("action_link")
+  bidAmount       Float         @map("bid_amount")
+  
+  createdAt       DateTime      @default(now()) @map("created_at")
+  
+  campaign        AdCampaign    @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  impressions     AdImpression[]
+
+  @@map("ad_creatives")
+}
+
+model AdImpression {
+  id              String        @id @default(cuid())
+  campaignId      String        @map("campaign_id")
+  creativeId      String        @map("creative_id")
+  userId          String        @map("user_id")
+  wasClicked      Boolean       @default(false) @map("was_clicked")
+  cost            Float
+  
+  createdAt       DateTime      @default(now()) @map("created_at")
+  
+  campaign        AdCampaign    @relation(fields: [campaignId], references: [id])
+  creative        AdCreative    @relation(fields: [creativeId], references: [id])
+
+  @@map("ad_impressions")
+}
+
+// ============================================
+// FILA DE PROCESSAMENTO DE VÍDEO
+// ============================================
+
+enum JobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model VideoProcessingJob {
+  id              String      @id @default(cuid())
+  videoId         String      @map("video_id")
+  status          JobStatus   @default(PENDING)
+  progress        Int         @default(0)
+  errorMessage    String?     @map("error_message")
+  
+  startedAt       DateTime?   @map("started_at")
+  completedAt     DateTime?   @map("completed_at")
+  createdAt       DateTime    @default(now()) @map("created_at")
+
+  @@index([status])
+  @@map("video_processing_jobs")
+}

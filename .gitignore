@@ -1,0 +1,21 @@
+# General
+.DS_Store
+.idea/
+.vscode/
+*.log
+
+# Node / Bun
+node_modules/
+npm-debug.log
+yarn-error.log
+bun.lockb
+backend/node_modules/
+backend/.env
+
+# Flutter
+mobile/build/
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.pub-cache/
+mobile/pubspec.lock
