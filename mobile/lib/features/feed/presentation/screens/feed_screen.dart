@@ -195,7 +195,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                       isActive: _feedType == FeedType.seguindo,
                       onTap: () {
                          setState(() => _feedType = FeedType.seguindo);
-                         // TODO: Atualizar provider com filtro
+                         ref.read(feedControllerProvider.notifier).setFeedType('seguindo');
                       },
                     ),
                     Container(
@@ -209,7 +209,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                       isActive: _feedType == FeedType.sugeridos,
                       onTap: () {
                          setState(() => _feedType = FeedType.sugeridos);
-                         // TODO: Atualizar provider com filtro
+                         ref.read(feedControllerProvider.notifier).setFeedType('sugeridos');
                       },
                     ),
                   ],

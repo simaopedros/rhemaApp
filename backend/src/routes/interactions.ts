@@ -13,6 +13,69 @@ const POINTS = {
     COMPLETION_BONUS: 5, // >80% assistido
 };
 
+// Pesos para atualização do vetor de interesse do usuário
+// Valor = quanto o vetor do vídeo influencia o perfil do usuário
+// Valores negativos = repulsão (afastar o perfil deste conteúdo)
+const INTEREST_WEIGHTS = {
+    LIKE: 0.10,         // 10% - Sinal claro de interesse
+    SHARE: 0.15,        // 15% - Compartilhou = gostou muito
+    SAVE: 0.08,         // 8% - Interesse moderado
+    VIEW_COMPLETE: 0.03, // 3% - Assistiu >80%
+    VIEW_SKIP: -0.05,   // -5% - Pulou rápido (<20%) = não gostou
+};
+
+/**
+ * Atualiza o vetor de interesse do usuário baseado em uma interação.
+ * 
+ * Peso POSITIVO: Atração (mover perfil em direção ao vídeo)
+ *   Fórmula: NovoPerfil = (1-peso)*PerfilAntigo + peso*VetorVideo
+ * 
+ * Peso NEGATIVO: Repulsão (afastar perfil do vídeo)
+ *   Fórmula: NovoPerfil = (1+|peso|)*PerfilAntigo - |peso|*VetorVideo
+ *   Isso "empurra" o vetor na direção oposta.
+ */
+async function updateUserInterest(userId: string, videoId: string, weight: number) {
+    try {
+        // Buscar vetor do vídeo
+        const [video] = await prisma.$queryRawUnsafe<any[]>(
+            `SELECT embedding::text as vector FROM videos WHERE id = '${videoId}'`
+        );
+
+        if (video?.vector) {
+            let sql: string;
+
+            if (weight >= 0) {
+                // ATRAÇÃO: Mover em direção ao vídeo
+                const oldWeight = 1 - weight;
+                sql = `UPDATE users 
+                       SET interest_vector = 
+                          CASE 
+                              WHEN interest_vector IS NULL THEN '${video.vector}'::vector
+                              ELSE (interest_vector * ${oldWeight} + '${video.vector}'::vector * ${weight})
+                          END
+                       WHERE id = '${userId}'`;
+                console.log(`✅ Interesse atualizado: ATRAÇÃO ${weight * 100}%`);
+            } else {
+                // REPULSÃO: Afastar do vídeo (só se já tiver vetor)
+                const absWeight = Math.abs(weight);
+                const oldWeight = 1 + absWeight; // > 1 para compensar subtração
+                sql = `UPDATE users 
+                       SET interest_vector = 
+                          CASE 
+                              WHEN interest_vector IS NULL THEN NULL -- Não inicializa com repulsão
+                              ELSE (interest_vector * ${oldWeight} - '${video.vector}'::vector * ${absWeight})
+                          END
+                       WHERE id = '${userId}'`;
+                console.log(`⛔ Interesse atualizado: REPULSÃO ${absWeight * 100}%`);
+            }
+
+            await prisma.$executeRawUnsafe(sql);
+        }
+    } catch (e) {
+        console.error('Erro ao atualizar interesse:', e);
+    }
+}
+
 export const interactionRoutes = new Elysia({ prefix: '/interactions' })
 
     // Registrar visualização
@@ -69,6 +132,15 @@ export const interactionRoutes = new Elysia({ prefix: '/interactions' })
                     completionRate,
                 }
             });
+
+            // ATUALIZAR VETOR baseado no comportamento
+            if (hasCompleted) {
+                // Assistiu >80% = interesse positivo (peso 3%)
+                updateUserInterest(userId, videoId, INTEREST_WEIGHTS.VIEW_COMPLETE);
+            } else if (completionRate < 0.2 && duration > 5) {
+                // Pulou rápido (<20% e vídeo tem >5s) = desinteresse (peso -5%)
+                updateUserInterest(userId, videoId, INTEREST_WEIGHTS.VIEW_SKIP);
+            }
         }
 
         return { success: true };
@@ -142,32 +214,8 @@ export const interactionRoutes = new Elysia({ prefix: '/interactions' })
             })
         ]);
 
-        // ATUALIZAR VETOR DE INTERESSE DO USUÁRIO (Background)
-        (async () => {
-            try {
-                // Buscar vetor do vídeo
-                const [video] = await prisma.$queryRawUnsafe<any[]>(
-                    `SELECT embedding::text as vector FROM videos WHERE id = '${videoId}'`
-                );
-
-                if (video?.vector) {
-                    // Atualizar vetor do usuário (Média Móvel: 90% antigo + 10% novo)
-                    // Se usuário não tiver vetor (NULL), usa o do vídeo (COALESCE)
-                    await prisma.$executeRawUnsafe(
-                        `UPDATE users 
-                         SET interest_vector = 
-                            CASE 
-                                WHEN interest_vector IS NULL THEN '${video.vector}'::vector
-                                ELSE (interest_vector * 0.9 + '${video.vector}'::vector * 0.1)
-                            END
-                         WHERE id = '${payload.userId}'`
-                    );
-                    console.log('✅ Interesse do usuário atualizado base no Like');
-                }
-            } catch (e) {
-                console.error('Erro ao atualizar interesse:', e);
-            }
-        })();
+        // ATUALIZAR VETOR (peso 10% - Like é sinal claro)
+        updateUserInterest(payload.userId, videoId, INTEREST_WEIGHTS.LIKE);
 
         return { success: true, liked: true };
     }, {
@@ -210,6 +258,9 @@ export const interactionRoutes = new Elysia({ prefix: '/interactions' })
                     type: InteractionType.SHARE,
                 }
             });
+
+            // ATUALIZAR VETOR (peso 15% - compartilhar é sinal forte)
+            updateUserInterest(userId, videoId, INTEREST_WEIGHTS.SHARE);
         }
 
         return { success: true };
@@ -259,6 +310,9 @@ export const interactionRoutes = new Elysia({ prefix: '/interactions' })
                 type: InteractionType.SAVE,
             }
         });
+
+        // ATUALIZAR VETOR (peso 8% - salvar indica interesse)
+        updateUserInterest(payload.userId, videoId, INTEREST_WEIGHTS.SAVE);
 
         return { success: true, saved: true };
     }, {

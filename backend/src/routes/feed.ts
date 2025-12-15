@@ -134,7 +134,9 @@ export const feedRoutes = new Elysia({ prefix: '/feed' })
                 })
             };
 
-            // Buscar vídeos ordenados por score
+            // Buscar vídeos
+            const isFollowing = type === 'seguindo';
+
             videos = await prisma.video.findMany({
                 where: whereClause,
                 include: {
@@ -158,10 +160,9 @@ export const feedRoutes = new Elysia({ prefix: '/feed' })
                         }
                     }
                 },
-                orderBy: [
-                    { score: 'desc' },
-                    { createdAt: 'desc' }
-                ],
+                orderBy: isFollowing
+                    ? { createdAt: 'desc' } // Seguindo: Cronológico
+                    : [{ score: 'desc' }, { createdAt: 'desc' }], // Sugeridos: Relevância
                 skip,
                 take: parseInt(limit),
             });

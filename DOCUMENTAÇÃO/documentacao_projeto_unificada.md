@@ -251,12 +251,19 @@ Este arquivo contém todas as etapas detalhadas para o desenvolvimento do projet
     - [x] Lógica para salvar os "Shorts" gerados no Banco de Dados
 
 ## FASE 4: Algoritmo de Recomendação (Vetorial/RAG)
-- [ ] **Sistema de Embeddings**
-    - [ ] Escolher modelo de embedding (OpenAI API ou Local `onnxruntime`)
-    - [ ] Criar função para gerar embedding ao salvar vídeo
-    - [ ] Criar função para atualizar vetor do usuário ao curtir vídeo
-- [ ] **Endpoint de Feed Inteligente**
-    - [ ] Implementar query raw com Prisma (`ORDER BY embedding <=> user_vector`)
+- [x] **Sistema de Embeddings**
+    - [x] Escolher modelo de embedding (Local `@xenova/transformers` - all-MiniLM-L6-v2)
+    - [x] Criar função para gerar embedding ao salvar vídeo (`AIService`)
+    - [x] Criar função para atualizar vetor do usuário ao interagir
+    - [x] **Pesos diferenciados por tipo de interação:**
+        - Like: 10% (atração)
+        - Share: 15% (atração - sinal forte)
+        - Save: 8% (atração)
+        - View >80%: 3% (atração)
+        - Skip <20%: -5% (repulsão - afasta do conteúdo)
+- [x] **Endpoint de Feed Inteligente**
+    - [x] Implementar query raw com Prisma (`ORDER BY embedding <=> user_vector`)
+    - [x] Tabs "Sugeridos" (IA) vs "Seguindo" (cronológico)
     - [ ] Otimizar indexação no Postgres (IVFFlat)
 
 ## FASE 5: Desenvolvimento Mobile (Flutter)
@@ -294,9 +301,11 @@ Este arquivo contém todas as etapas detalhadas para o desenvolvimento do projet
     - [ ] SEO Básico (Meta tags dinâmicas no index.html se possível ou SSR wrapper)
 
 ## FASE 7: Social & Polimento
-- [ ] **Interações**
-    - [x] Implementar Curtir (UI Otimista implementada)
+- [x] **Interações**
+    - [x] Implementar Curtir (UI Otimista + Backend + Atualiza Vetor)
     - [x] Implementar Comentários (UI & Controller implementados)
+    - [x] Implementar Compartilhar (UI + Backend + Atualiza Vetor)
+    - [x] Implementar Salvar (UI + Backend + Atualiza Vetor)
     - [x] Implementar Perfil de Usuário (Lista de vídeos publicados)
 - [ ] **Testes & QA**
     - [ ] Teste de Carga no Backend

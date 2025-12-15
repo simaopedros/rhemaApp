@@ -132,6 +132,7 @@ class _VideoCardState extends State<VideoCard> with TickerProviderStateMixin {
       // Swipe Up (Negative velocity)
       widget.onSwipeUp();
     }
+  }
 
 
 

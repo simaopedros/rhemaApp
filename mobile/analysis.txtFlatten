@@ -1,0 +1,101 @@
+Analyzing mobile...                                             
+
+   info - Don't invoke 'print' in production code - lib\core\network\api_client.dart:25:24 - avoid_print
+   info - Use 'const' for final variables initialized to a constant value - lib\core\network\api_client.dart:33:9 - prefer_const_declarations
+   info - Use 'const' for final variables initialized to a constant value - lib\core\network\api_client.dart:46:11 - prefer_const_declarations
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\screens\auth_screen.dart:157:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\screens\auth_screen.dart:159:18 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\screens\auth_screen.dart:208:12 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\screens\auth_screen.dart:209:7 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\screens\auth_screen.dart:211:16 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\features\auth\presentation\screens\auth_screen.dart:215:19 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\screens\auth_screen.dart:216:11 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\screens\auth_screen.dart:218:20 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\screens\auth_screen.dart:224:11 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\screens\auth_screen.dart:226:20 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\screens\splash_screen.dart:126:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\screens\splash_screen.dart:128:34 - prefer_const_constructors
+warning - Unused import: 'dart:math' - lib\features\feed\data\repositories\feed_repository.dart:6:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\features\feed\data\repositories\feed_repository.dart:36:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\feed\data\repositories\feed_repository.dart:39:8 - avoid_print
+warning - Unused import: 'package:rhema_app/features/feed/data/repositories/feed_repository.dart' - lib\features\feed\data\repositories\interaction_repository.dart:4:8 - unused_import
+warning - The value of the field '_dio' isn't used - lib\features\feed\data\repositories\interaction_repository.dart:15:13 - unused_field
+   info - Don't invoke 'print' in production code - lib\features\feed\data\repositories\interaction_repository.dart:24:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\feed\presentation\providers\comments_controller.dart:67:7 - avoid_print
+warning - The stack trace variable 'st' isn't used and can be removed - lib\features\feed\presentation\providers\feed_provider.dart:54:17 - unused_catch_stack
+warning - Unused import: 'package:rhema_app/features/feed/presentation/widgets/video_stats_drawer.dart' - lib\features\feed\presentation\screens\feed_screen.dart:12:8 - unused_import
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\feed_screen.dart:136:19 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\feed_screen.dart:138:28 - prefer_const_constructors
+   info - The local variable '_commentInputController' starts with an underscore - lib\features\feed\presentation\screens\feed_screen.dart:244:33 - no_leading_underscores_for_local_identifiers
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\feed_screen.dart:344:56 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\feed_screen.dart:351:45 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\feed_screen.dart:354:54 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\feed_screen.dart:391:42 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\feed_screen.dart:417:33 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\feed_screen.dart:506:18 - prefer_const_constructors
+warning - The value of the local variable 'displayVideoUrl' isn't used - lib\features\feed\presentation\screens\video_detail_screen.dart:18:11 - unused_local_variable
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\video_detail_screen.dart:45:26 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\features\feed\presentation\screens\video_detail_screen.dart:46:31 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\video_detail_screen.dart:47:23 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\video_detail_screen.dart:49:23 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\video_detail_screen.dart:51:32 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\video_detail_screen.dart:60:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\video_detail_screen.dart:62:26 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\video_detail_screen.dart:70:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\video_detail_screen.dart:175:43 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\video_detail_screen.dart:218:56 - prefer_const_constructors
+warning - Unused import: 'dart:math' - lib\features\feed\presentation\widgets\video_card.dart:6:8 - unused_import
+  error - Missing concrete implementation of 'State.build' - lib\features\feed\presentation\widgets\video_card.dart:36:7 - non_abstract_class_inherits_abstract_member
+   info - The declaration 'build' isn't referenced - lib\features\feed\presentation\widgets\video_card.dart:139:10 - unused_element
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\widgets\video_card.dart:233:31 - prefer_const_constructors
+  error - The method '_SidebarButton' isn't defined for the type '_VideoCardState' - lib\features\feed\presentation\widgets\video_card.dart:305:21 - undefined_method
+  error - The method '_SidebarButton' isn't defined for the type '_VideoCardState' - lib\features\feed\presentation\widgets\video_card.dart:313:21 - undefined_method
+  error - The method '_SidebarButton' isn't defined for the type '_VideoCardState' - lib\features\feed\presentation\widgets\video_card.dart:320:21 - undefined_method
+  error - The method '_SidebarButton' isn't defined for the type '_VideoCardState' - lib\features\feed\presentation\widgets\video_card.dart:328:21 - undefined_method
+  error - Classes can't be declared inside other classes - lib\features\feed\presentation\widgets\video_card.dart:346:1 - class_in_class
+  error - Expected a class member - lib\features\feed\presentation\widgets\video_card.dart:346:22 - expected_class_member
+   info - The variable name 'StatelessWidget' isn't a lowerCamelCase identifier - lib\features\feed\presentation\widgets\video_card.dart:346:30 - non_constant_identifier_names
+  error - Methods must have an explicit list of parameters - lib\features\feed\presentation\widgets\video_card.dart:346:30 - missing_method_parameters
+  error - The name '_SidebarButton' isn't a class - lib\features\feed\presentation\widgets\video_card.dart:353:9 - creation_with_non_type
+  error - Expected to find ',' - lib\features\feed\presentation\widgets\video_card.dart:354:14 - expected_token
+  error - The getter 'icon' isn't defined for the type '_VideoCardState' - lib\features\feed\presentation\widgets\video_card.dart:354:19 - undefined_getter
+  error - Expected to find ',' - lib\features\feed\presentation\widgets\video_card.dart:355:14 - expected_token
+  error - The getter 'label' isn't defined for the type '_VideoCardState' - lib\features\feed\presentation\widgets\video_card.dart:355:19 - undefined_getter
+  error - Expected to find ',' - lib\features\feed\presentation\widgets\video_card.dart:356:14 - expected_token
+  error - The getter 'onTap' isn't defined for the type '_VideoCardState' - lib\features\feed\presentation\widgets\video_card.dart:356:19 - undefined_getter
+  error - The setter 'color' isn't defined for the type '_VideoCardState' - lib\features\feed\presentation\widgets\video_card.dart:357:10 - undefined_setter
+  error - The setter 'iconSize' isn't defined for the type '_VideoCardState' - lib\features\feed\presentation\widgets\video_card.dart:358:10 - undefined_setter
+   info - The declaration 'build' isn't referenced - lib\features\feed\presentation\widgets\video_card.dart:362:10 - unused_element
+  error - The final variable 'onTap' can't be read because it's potentially unassigned at this point - lib\features\feed\presentation\widgets\video_card.dart:366:16 - read_potentially_unassigned_final
+  error - The final variable 'icon' can't be read because it's potentially unassigned at this point - lib\features\feed\presentation\widgets\video_card.dart:369:18 - read_potentially_unassigned_final
+  error - The final variable 'iconSize' can't be read because it's potentially unassigned at this point - lib\features\feed\presentation\widgets\video_card.dart:369:30 - read_potentially_unassigned_final
+  error - The final variable 'color' can't be read because it's potentially unassigned at this point - lib\features\feed\presentation\widgets\video_card.dart:369:47 - read_potentially_unassigned_final
+  error - The final variable 'label' can't be read because it's potentially unassigned at this point - lib\features\feed\presentation\widgets\video_card.dart:374:15 - read_potentially_unassigned_final
+  error - Expected to find '}' - lib\features\feed\presentation\widgets\video_card.dart:389:1 - expected_token
+   info - Don't invoke 'print' in production code - lib\features\profile\data\repositories\profile_repository.dart:47:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\profile\data\repositories\profile_repository.dart:73:7 - avoid_print
+warning - The operand can't be null, so the condition is always 'true' - lib\features\profile\presentation\providers\profile_controller.dart:48:16 - unnecessary_null_comparison
+   info - Use 'const' with the constructor to improve performance - lib\features\profile\presentation\screens\profile_screen.dart:276:18 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\search\presentation\screens\search_screen.dart:143:22 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\search\presentation\screens\search_screen.dart:146:23 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\search\presentation\screens\search_screen.dart:153:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\search\presentation\screens\search_screen.dart:218:11 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\search\presentation\screens\search_screen.dart:251:18 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\search\presentation\screens\search_screen.dart:292:27 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\search\presentation\screens\search_screen.dart:299:30 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\search\presentation\screens\search_screen.dart:458:13 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\search\presentation\screens\search_screen.dart:489:21 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\search\presentation\screens\search_screen.dart:493:30 - prefer_const_constructors
+warning - Unused import: 'dart:io' - lib\features\upload\data\upload_repository.dart:1:8 - unused_import
+warning - Unused import: 'dart:io' - lib\features\upload\presentation\providers\upload_controller.dart:1:8 - unused_import
+warning - Unused import: 'package:rhema_app/core/theme/app_theme.dart' - lib\features\upload\presentation\screens\upload_screen.dart:6:8 - unused_import
+   info - 'background' is deprecated and shouldn't be used. Use surface instead. This feature was deprecated after v3.18.0-0.1.pre - lib\features\upload\presentation\screens\upload_screen.dart:61:44 - deprecated_member_use
+   info - 'background' is deprecated and shouldn't be used. Use surface instead. This feature was deprecated after v3.18.0-0.1.pre - lib\features\upload\presentation\screens\upload_screen.dart:126:42 - deprecated_member_use
+warning - The value of the local variable 'suffixes' isn't used - lib\features\upload\presentation\screens\upload_screen.dart:390:11 - unused_local_variable
+warning - The value of the local variable 'size' isn't used - lib\features\upload\presentation\screens\upload_screen.dart:393:12 - unused_local_variable
+   info - Use 'const' with the constructor to improve performance - lib\features\video\presentation\screens\video_player_screen.dart:344:32 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\video\presentation\screens\video_player_screen.dart:393:35 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\video\presentation\screens\video_player_screen.dart:399:38 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\video\presentation\screens\video_player_screen.dart:424:28 - prefer_const_constructors
+warning - Unused import: 'package:flutter/material.dart' - test\widget_test.dart:1:8 - unused_import
+
