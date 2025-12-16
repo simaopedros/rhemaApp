@@ -157,6 +157,7 @@ class _VideoCardState extends State<VideoCard> with TickerProviderStateMixin {
     
     return GestureDetector(
       behavior: HitTestBehavior.translucent, // Permite que PageView receba gestos
+      onVerticalDragEnd: _handleVerticalDragEnd,
       onDoubleTap: _handleDoubleTap,
       onTap: () {
         if (_isMenuOpen) {
