@@ -15,7 +15,7 @@ class VideoCard extends StatefulWidget {
   final VoidCallback onUserTap;
   final VoidCallback onTap; // Open Detail
   final VoidCallback onSwipeUp;
-
+  final VoidCallback onSwipeDown;
 
   const VideoCard({
     super.key,
@@ -27,7 +27,7 @@ class VideoCard extends StatefulWidget {
     required this.onUserTap,
     required this.onTap,
     required this.onSwipeUp,
-
+    required this.onSwipeDown,
   });
 
   @override
@@ -41,6 +41,9 @@ class _VideoCardState extends State<VideoCard> with TickerProviderStateMixin {
   bool _isInitialized = false;
   bool _showDoubleTapHeart = false;
   
+  // Menu Radial State
+  bool _isMenuOpen = false;
+  bool _isShareMenuOpen = false;
 
   @override
   void initState() {
@@ -62,33 +65,30 @@ class _VideoCardState extends State<VideoCard> with TickerProviderStateMixin {
       if (widget.isActive) {
         _initializeVideo();
       } else {
-        // Pausar quando sair da tela
         _videoController?.pause();
+        // Fechar menus se sair do vídeo
+        if (_isMenuOpen) setState(() => _isMenuOpen = false);
       }
     }
   }
 
   Future<void> _initializeVideo() async {
+    // Lógica original de inicialização
     final url = widget.video.videoUrl;
-    
-    // Tentar obter do cache (já pré-carregado)
     final cachedController = _preloadService.getCachedController(url);
     
     if (cachedController != null && cachedController.value.isInitialized) {
-      // Cache HIT - reprodução instantânea!
       if (mounted) {
         setState(() {
           _videoController = cachedController;
           _isInitialized = true;
         });
-        // Reset e play
         await cachedController.seekTo(Duration.zero);
         cachedController.play();
       }
       return;
     }
     
-    // Cache MISS - carregar normalmente
     try {
       final controller = await _preloadService.getController(url);
       if (controller != null && mounted) {
@@ -123,50 +123,70 @@ class _VideoCardState extends State<VideoCard> with TickerProviderStateMixin {
       }
     });
   }
-
-  void _handleVerticalDragEnd(DragEndDetails details) {
-    // Detect Swipe Up/Down
-    final velocity = details.primaryVelocity ?? 0;
-    if (velocity < -500) {
-      // Swipe Up (Negative velocity)
-      widget.onSwipeUp();
-    }
+  
+  void _toggleMenu() {
+    setState(() {
+      if (_isMenuOpen) {
+        _isMenuOpen = false;
+        _isShareMenuOpen = false;
+      } else {
+        _isMenuOpen = true;
+      }
+    });
   }
 
+  void _handleVerticalDragUpdate(DragUpdateDetails details) {
+    // Implementar lógica de threshold se necessário
+  }
 
+  void _handleVerticalDragEnd(DragEndDetails details) {
+    final velocity = details.primaryVelocity ?? 0;
+    if (velocity < -500) {
+      // Swipe Up -> Comentários
+      widget.onSwipeUp();
+    } else if (velocity > 500) {
+      // Swipe Down -> Stats
+      widget.onSwipeDown();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final user = widget.video.user;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        // 1. Video Player or Thumbnail - Wrapped in IgnorePointer to fix PageView scroll
-        IgnorePointer(
-          child: _isInitialized && _videoController != null
-              ? SizedBox.expand(
-                  child: FittedBox(
-                    fit: BoxFit.cover,
-                    child: SizedBox(
-                      width: _videoController!.value.size.width,
-                      height: _videoController!.value.size.height,
-                      child: VideoPlayer(_videoController!),
-                    ),
-                  ),
-                )
-              : CachedNetworkImage(
-                  imageUrl: widget.video.thumbnailUrl ?? widget.video.videoUrl,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(color: Colors.black),
-                  errorWidget: (context, url, err) => Container(color: Colors.black),
-                ),
-        ),
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent, // Permite que PageView receba gestos
+      onDoubleTap: _handleDoubleTap,
+      onTap: () {
+        if (_isMenuOpen) {
+           _toggleMenu();
+        } else {
+           widget.onTap();
+        }
+      },
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // 1. Video Layer
+          _buildVideoPlayer(),
 
-
-
-          // 2. Double Tap Heart Animation
+          // 2. Gradient Layer
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withOpacity(0.1),
+                  Colors.transparent,
+                  Colors.black.withOpacity(0.6),
+                ],
+              ),
+            ),
+          ),
+          
+          // 3. Double Tap Heart
           if (_showDoubleTapHeart)
             Center(
               child: AnimatedBuilder(
@@ -183,48 +203,24 @@ class _VideoCardState extends State<VideoCard> with TickerProviderStateMixin {
               ),
             ),
 
-          // 3. Gradient Overlay
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withOpacity(0.1),
-                  Colors.transparent,
-                  Colors.black.withOpacity(0.6),
-                ],
-              ),
-            ),
-          ),
-
-        // 2. Gesture Detector Layer (MOVED HERE TO BE ABOVE GRADIENT)
-        GestureDetector(
-          behavior: HitTestBehavior.opaque, // Opaque to catch taps on transparent areas
-          onTap: widget.onTap,
-          onDoubleTap: _handleDoubleTap,
-          child: Container(color: Colors.transparent),
-        ),
-
-          // 4. Content Area
+          // 4. Content Content (Bottom)
           Positioned(
             left: 16,
-            right: 8, // Reduced spacing for sidebar
+            right: 16,
             bottom: 24 + bottomPadding,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // LEFT: Text Info
+                // Text Info (Left)
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // User Handle & Badge
-                      GestureDetector(
-                        onTap: widget.onUserTap, // Also open profile on name tap
-                        child: Row(
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 300),
+                    opacity: _isMenuOpen ? 0.3 : 1.0,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                         Row(
                           children: [
                             Text(
                               user.handle,
@@ -241,154 +237,200 @@ class _VideoCardState extends State<VideoCard> with TickerProviderStateMixin {
                             ],
                           ],
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      // Description
-                      if (widget.video.description != null)
-                        Text(
-                          widget.video.description!,
-                          maxLines: 4,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            height: 1.3,
-                            shadows: [Shadow(color: Colors.black45, blurRadius: 4)],
-                          ),
-                        ),
-                      const SizedBox(height: 12),
-
-                    ],
-                  ),
-                ),
-
-                const SizedBox(width: 16),
-
-                // RIGHT: Standard Vertical Sidebar
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Avatar Profile Link
-                    Stack(
-                      alignment: Alignment.bottomCenter,
-                      clipBehavior: Clip.none,
-                      children: [
-                        GestureDetector(
-                          onTap: widget.onUserTap,
-                          child: Container(
-                            decoration: BoxDecoration(
-                               border: Border.all(color: Colors.white, width: 1),
-                               shape: BoxShape.circle,
-                            ),
-                            child: CircleAvatar(
-                              radius: 24,
-                              backgroundImage: user.avatar != null 
-                                 ? CachedNetworkImageProvider(user.avatar!)
-                                 : null,
-                              child: user.avatar == null ? const Icon(Icons.person) : null,
+                        const SizedBox(height: 8),
+                        if (widget.video.description != null)
+                          Text(
+                            widget.video.description!,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                              height: 1.3,
+                              shadows: [Shadow(color: Colors.black45, blurRadius: 4)],
                             ),
                           ),
-                        ),
-                        // Follow Button Badge
-                        Positioned(
-                          bottom: -10,
-                          child: GestureDetector(
-                            onTap: widget.onUserTap, // Or follow logic
-                            child: Container(
-                              decoration: const BoxDecoration(
-                                color: RhemaColors.gold,
-                                shape: BoxShape.circle,
-                              ),
-                              padding: const EdgeInsets.all(2),
-                              child: const Icon(Icons.add, color: Colors.white, size: 16),
-                            ),
-                          ),
-                        ),
+                         const SizedBox(height: 8),
+                         // Music Note placeholder
+                         Row(
+                           children: [
+                             const Icon(Icons.music_note, size: 14, color: Colors.white70),
+                             const SizedBox(width: 4),
+                             Text('Som original - ${user.name}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                           ],
+                         )
                       ],
                     ),
-                    const SizedBox(height: 24),
-                    
-                    // Like Button
-                    _SidebarButton(
-                      icon: widget.video.isLiked ? Icons.favorite : Icons.favorite_rounded,
-                      label: widget.video.likes.toString(),
-                      color: widget.video.isLiked ? Colors.red : Colors.white,
-                      onTap: widget.onLike,
-                    ),
-
-                    // Comment Button
-                    _SidebarButton(
-                      icon: Icons.comment_rounded,
-                      label: widget.video.comments.toString(),
-                      onTap: widget.onComment,
-                    ),
-
-                    // Bookmark Button
-                    _SidebarButton(
-                      icon: Icons.bookmark_rounded,
-                      label: 'Salvar',
-                      iconSize: 30, // Slightly larger visual
-                      onTap: () {},
-                    ),
-
-                    // Share Button
-                    _SidebarButton(
-                      icon: Icons.share,
-                      label: 'Partilhar', // More generic
-                      onTap: widget.onShare,
-                    ),
-                    
-
-                  ],
+                  ),
+                ),
+                
+                // Radial Menu (Right)
+                SizedBox(
+                  width: 64,
+                  height: 200, // Area para os botões expandirem
+                  child: Stack(
+                     alignment: Alignment.bottomCenter,
+                     clipBehavior: Clip.none, // Permitir overflow se necessário
+                     children: [
+                        // --- Radial Buttons ---
+                        // Like (Top)
+                        _buildRadialButton(
+                           index: 0,
+                           offset: const Offset(0, -80),
+                           icon: widget.video.isLiked ? Icons.favorite : Icons.favorite_border,
+                           color: widget.video.isLiked ? Colors.red : Colors.white,
+                           onTap: widget.onLike,
+                           delay: 0,
+                        ),
+                        // Share (Top-Left diagonal approx) -> Using simplified vertical stack for Flutter Layout stability for now
+                        // Or implementing exact radial coordinates:
+                        // Share (Left-Top) [-45px, -65px]
+                        _buildRadialButton(
+                           index: 1,
+                           offset: const Offset(-45, -65),
+                           icon: Icons.share,
+                           onTap: () => setState(() => _isShareMenuOpen = true), // Should open sub-menu
+                           delay: 25,
+                           disabled: _isShareMenuOpen,
+                        ),
+                        // Follow (Left) [-70px, -35px]
+                        _buildRadialButton(
+                           index: 2,
+                           offset: const Offset(-70, -35),
+                           icon: Icons.person_add,
+                           onTap: () {
+                             // Toggle Follow Logic
+                           }, 
+                           delay: 50,
+                           disabled: _isShareMenuOpen,
+                        ),
+                        // Save (Bottom-Left) [-80px, 0]
+                        _buildRadialButton(
+                           index: 3,
+                           offset: const Offset(-80, 0),
+                           icon: Icons.bookmark_border,
+                           onTap: () {},
+                           delay: 75,
+                           disabled: _isShareMenuOpen,
+                        ),
+                        
+                        // Avatar Trigger (Main)
+                        Positioned(
+                          bottom: 0,
+                          child: GestureDetector(
+                            onTap: _toggleMenu,
+                            child: AnimatedScale(
+                               scale: _isMenuOpen ? 0.9 : 1.0,
+                               duration: const Duration(milliseconds: 300),
+                               child: Container(
+                                 decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                       color: _isMenuOpen ? RhemaColors.gold : Colors.white, 
+                                       width: _isMenuOpen ? 3 : 2
+                                    ),
+                                    boxShadow: [
+                                      if (_isMenuOpen) const BoxShadow(color: Colors.black26, blurRadius: 10)
+                                    ]
+                                 ),
+                                 child: CircleAvatar(
+                                    radius: 28,
+                                    backgroundImage: user.avatar != null ? CachedNetworkImageProvider(user.avatar!) : null,
+                                    child: user.avatar == null ? const Icon(Icons.person) : null,
+                                 ),
+                               ),
+                            ),
+                          ),
+                        ),
+                     ],
+                  ),
                 ),
               ],
             ),
           ),
         ],
-    );
-  }
-}
-
-class _SidebarButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final Color color;
-  final double iconSize;
-
-  const _SidebarButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.color = Colors.white,
-    this.iconSize = 32,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Column(
-          children: [
-            Icon(icon, size: iconSize, color: color,
-              shadows: const [Shadow(color: Colors.black26, blurRadius: 4)],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                shadows: [Shadow(color: Colors.black26, blurRadius: 4)],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
-}
 
+  Widget _buildVideoPlayer() {
+     if (_isInitialized && _videoController != null) {
+        return SizedBox.expand(
+           child: FittedBox(
+             fit: BoxFit.cover,
+             child: SizedBox(
+               width: _videoController!.value.size.width,
+               height: _videoController!.value.size.height,
+               child: VideoPlayer(_videoController!),
+             ),
+           ),
+        );
+     }
+     if (widget.video.thumbnailUrl != null) {
+       return CachedNetworkImage(
+          imageUrl: widget.video.thumbnailUrl!,
+          fit: BoxFit.cover,
+          placeholder: (context, url) => Container(color: Colors.black),
+          errorWidget: (context, url, err) => Container(color: Colors.black),
+       );
+     }
+     return Container(color: Colors.black);
+  }
+
+  Widget _buildRadialButton({
+    required int index,
+    required Offset offset,
+    required IconData icon,
+    required VoidCallback onTap,
+    required int delay,
+    Color color = Colors.white,
+    bool disabled = false,
+  }) {
+      // Logic: If menu is closed, translate to 0 (hidden behind avatar)
+      // If menu is open, translate to offset.
+      final targetOffset = _isMenuOpen ? offset : Offset.zero;
+      final opacity = _isMenuOpen ? 1.0 : 0.0;
+      final scale = _isMenuOpen ? 1.0 : 0.5;
+      
+      return AnimatedPositioned(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutBack,
+        bottom: -targetOffset.dy, // Inverting Y because Stack bottom alignment
+        right: -targetOffset.dx,  // Inverting X because Stack is aligned but we want left relative
+        // Correction: Positioned relative to the stack center or bottom-center?
+        // Stack alignment is bottomCenter.
+        // Let's use left/bottom logic relative to the center of Avatar.
+        // If bottom=0 is avatar bottom.
+        // We want offset relative to the center.
+        // Let's rely on Transform.translate
+        
+        child: AnimatedContainer(
+           duration: Duration(milliseconds: 300 + delay),
+           curve: Curves.easeOutBack,
+           transform: Matrix4.translationValues(
+              _isMenuOpen ? offset.dx : 0, 
+              _isMenuOpen ? offset.dy : 0, 
+              0
+           )..scale(scale),
+           child: AnimatedOpacity(
+             duration: const Duration(milliseconds: 200),
+             opacity: opacity,
+             child: GestureDetector(
+               onTap: onTap,
+               child: Container(
+                 width: 40,
+                 height: 40,
+                 decoration: BoxDecoration(
+                   color: Colors.black45,
+                   shape: BoxShape.circle,
+                   border: Border.all(color: Colors.white24, width: 1),
+                   boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
+                 ),
+                 child: Icon(icon, color: color, size: 20),
+               ),
+             ),
+           ),
+        )
+      );
+  }
+}

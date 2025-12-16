@@ -1,0 +1,91 @@
+Analyzing mobile...                                             
+
+   info - Don't invoke 'print' in production code - lib\core\network\api_client.dart:26:24 - avoid_print
+   info - Use 'const' for final variables initialized to a constant value - lib\core\network\api_client.dart:34:9 - prefer_const_declarations
+   info - Use 'const' for final variables initialized to a constant value - lib\core\network\api_client.dart:47:11 - prefer_const_declarations
+warning - Unused import: 'package:rhema_app/features/feed/presentation/screens/feed_screen.dart' - lib\core\router\app_router.dart:6:8 - unused_import
+   info - Use 'const' for final variables initialized to a constant value - lib\features\auth\presentation\screens\auth_screen.dart:60:9 - prefer_const_declarations
+   info - Use 'const' for final variables initialized to a constant value - lib\features\auth\presentation\screens\auth_screen.dart:111:9 - prefer_const_declarations
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\screens\auth_screen.dart:227:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\screens\auth_screen.dart:229:18 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\screens\auth_screen.dart:275:12 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\screens\auth_screen.dart:276:7 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\screens\auth_screen.dart:278:16 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\features\auth\presentation\screens\auth_screen.dart:282:19 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\screens\auth_screen.dart:283:11 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\screens\auth_screen.dart:285:20 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\screens\auth_screen.dart:291:11 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\screens\auth_screen.dart:293:20 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\screens\splash_screen.dart:126:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\screens\splash_screen.dart:128:34 - prefer_const_constructors
+warning - Unused import: 'dart:math' - lib\features\feed\data\repositories\feed_repository.dart:6:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\features\feed\data\repositories\feed_repository.dart:30:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\feed\data\repositories\feed_repository.dart:36:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\feed\data\repositories\feed_repository.dart:41:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\feed\data\repositories\feed_repository.dart:44:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\feed\data\repositories\feed_repository.dart:48:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\feed\data\repositories\feed_repository.dart:50:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\feed\data\repositories\feed_repository.dart:53:8 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\feed\data\repositories\feed_repository.dart:55:8 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\feed\data\repositories\interaction_repository.dart:46:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\feed\presentation\providers\comments_controller.dart:67:7 - avoid_print
+warning - The stack trace variable 'st' isn't used and can be removed - lib\features\feed\presentation\providers\feed_provider.dart:54:17 - unused_catch_stack
+warning - Unused import: 'package:intl/intl.dart' - lib\features\feed\presentation\screens\feed_screen.dart:14:8 - unused_import
+warning - Unused import: 'package:rhema_app/features/feed/presentation/widgets/video_stats_drawer.dart' - lib\features\feed\presentation\screens\feed_screen.dart:15:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\features\feed\presentation\screens\feed_screen.dart:118:15 - avoid_print
+  error - The named parameter 'onSwipeDown' is required, but there's no corresponding argument - lib\features\feed\presentation\screens\feed_screen.dart:129:26 - missing_required_argument
+   info - Don't invoke 'print' in production code - lib\features\feed\presentation\screens\feed_screen.dart:156:15 - avoid_print
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\feed_screen.dart:200:22 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\features\feed\presentation\screens\feed_screen.dart:202:27 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\feed_screen.dart:203:19 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\feed_screen.dart:205:28 - prefer_const_constructors
+warning - The value of the local variable 'feedState' isn't used - lib\features\feed\presentation\screens\feed_screen.dart:250:11 - unused_local_variable
+warning - The value of the local variable 'feedState' isn't used - lib\features\feed\presentation\screens\feed_screen.dart:323:11 - unused_local_variable
+warning - Unused import: 'package:go_router/go_router.dart' - lib\features\feed\presentation\screens\feed_screen_v2.dart:3:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\features\feed\presentation\screens\video_detail_screen.dart:41:7 - avoid_print
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\video_detail_screen.dart:80:26 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\features\feed\presentation\screens\video_detail_screen.dart:81:31 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\video_detail_screen.dart:82:23 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\video_detail_screen.dart:84:23 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\video_detail_screen.dart:86:32 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\video_detail_screen.dart:95:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\video_detail_screen.dart:97:26 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\video_detail_screen.dart:105:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\video_detail_screen.dart:202:43 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\screens\video_detail_screen.dart:245:56 - prefer_const_constructors
+warning - Unused import: 'dart:math' - lib\features\feed\presentation\widgets\video_card.dart:7:8 - unused_import
+   info - The declaration '_handleVerticalDragUpdate' isn't referenced - lib\features\feed\presentation\widgets\video_card.dart:138:8 - unused_element
+   info - The declaration '_handleVerticalDragEnd' isn't referenced - lib\features\feed\presentation\widgets\video_card.dart:142:8 - unused_element
+   info - Use 'const' with the constructor to improve performance - lib\features\feed\presentation\widgets\video_card.dart:236:31 - prefer_const_constructors
+   info - Don't invoke 'print' in production code - lib\features\profile\data\repositories\profile_repository.dart:47:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\profile\data\repositories\profile_repository.dart:73:7 - avoid_print
+warning - The operand can't be null, so the condition is always 'true' - lib\features\profile\presentation\providers\profile_controller.dart:48:16 - unnecessary_null_comparison
+   info - Use 'const' with the constructor to improve performance - lib\features\profile\presentation\screens\profile_screen.dart:300:18 - prefer_const_constructors
+warning - The exception variable 'e' isn't used, so the 'catch' clause can be removed - lib\features\search\data\search_service.dart:35:30 - unused_catch_clause
+warning - The exception variable 'e' isn't used, so the 'catch' clause can be removed - lib\features\search\data\search_service.dart:60:30 - unused_catch_clause
+   info - Use 'const' with the constructor to improve performance - lib\features\search\presentation\screens\search_screen.dart:71:22 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\search\presentation\screens\search_screen.dart:74:23 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\search\presentation\screens\search_screen.dart:82:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\search\presentation\screens\search_screen.dart:108:13 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\search\presentation\screens\search_screen.dart:110:22 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\search\presentation\screens\search_screen.dart:184:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\search\presentation\screens\search_screen.dart:223:18 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\search\presentation\screens\search_screen.dart:267:27 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\search\presentation\screens\search_screen.dart:274:30 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\search\presentation\screens\search_screen.dart:407:32 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\search\presentation\screens\search_screen.dart:408:16 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\search\presentation\screens\search_screen.dart:410:18 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\search\presentation\screens\search_screen.dart:423:19 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\search\presentation\screens\search_screen.dart:427:28 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\search\presentation\screens\search_screen.dart:461:17 - prefer_const_constructors
+warning - Unused import: 'dart:io' - lib\features\upload\data\upload_repository.dart:1:8 - unused_import
+warning - Unused import: 'dart:io' - lib\features\upload\presentation\providers\upload_controller.dart:1:8 - unused_import
+warning - Unused import: 'package:rhema_app/core/theme/app_theme.dart' - lib\features\upload\presentation\screens\upload_screen.dart:6:8 - unused_import
+   info - 'background' is deprecated and shouldn't be used. Use surface instead. This feature was deprecated after v3.18.0-0.1.pre - lib\features\upload\presentation\screens\upload_screen.dart:61:44 - deprecated_member_use
+   info - 'background' is deprecated and shouldn't be used. Use surface instead. This feature was deprecated after v3.18.0-0.1.pre - lib\features\upload\presentation\screens\upload_screen.dart:126:42 - deprecated_member_use
+warning - The value of the local variable 'suffixes' isn't used - lib\features\upload\presentation\screens\upload_screen.dart:390:11 - unused_local_variable
+warning - The value of the local variable 'size' isn't used - lib\features\upload\presentation\screens\upload_screen.dart:393:12 - unused_local_variable
+warning - The value of the local variable 'duration' isn't used - lib\features\video\presentation\screens\video_player_screen.dart:85:13 - unused_local_variable
+   info - Don't invoke 'print' in production code - lib\main.dart:14:5 - avoid_print
+warning - Unused import: 'package:flutter/material.dart' - test\widget_test.dart:1:8 - unused_import
+

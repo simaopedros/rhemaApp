@@ -26,18 +26,34 @@ class FeedRepository extends ApiService {
 
       final data = response.data;
       if (data['success'] == true) {
-        final List videos = data['videos'];
-        return videos.map((v) => VideoModel.fromJson(v)).toList();
+        final List videosRaw = data['videos'];
+        print('🔍 DEBUG REPO: API returned ${videosRaw.length} raw videos');
+        
+        final videos = videosRaw.map((v) {
+          try {
+            return VideoModel.fromJson(v);
+          } catch (e) {
+            print('❌ DEBUG REPO: Error parsing video ${v['id']}: $e');
+            rethrow;
+          }
+        }).toList();
+        
+        print('✅ DEBUG REPO: Parsed ${videos.length} videos successfully');
+        return videos;
       } else {
+        print('❌ DEBUG REPO: API success=false. Error: ${data['error']}');
         throw Exception(data['error'] ?? 'Erro ao carregar vídeos');
       }
     } on DioException catch (e) {
-      // Fallback para Mock Data se a API falhar (Modo Offline/Dev)
-      print('⚠️ API Error: ${e.message}. Using Fallback Mock Data.');
-      return _getMockVideos();
+      print('⚠️ DEBUG REPO: API Error: ${e.message}. Using Fallback Mock Data.');
+      final mocks = _getMockVideos();
+      print('📦 DEBUG REPO: Returning ${mocks.length} mock videos');
+      return mocks;
     } catch (e) {
-       print('⚠️ Generic Error: $e. Using Fallback Mock Data.');
-       return _getMockVideos();
+       print('⚠️ DEBUG REPO: Generic Error: $e. Using Fallback Mock Data.');
+       final mocks = _getMockVideos();
+       print('📦 DEBUG REPO: Returning ${mocks.length} mock videos');
+       return mocks;
     }
   }
 

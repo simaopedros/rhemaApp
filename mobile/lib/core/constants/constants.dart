@@ -1,7 +1,7 @@
 /// Constantes da API e configurações
 class ApiConstants {
   // Base URL do backend
-  static const String baseUrl = 'https://recruitment-hats-eye-remarks.trycloudflare.com';
+  static const String baseUrl = 'https://regularly-telecommunications-keep-doll.trycloudflare.com';
   
   // Endpoints de Autenticação
   static const String authGoogle = '/auth/google';

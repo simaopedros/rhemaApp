@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rhema_app/features/auth/presentation/screens/auth_screen.dart';
 import 'package:rhema_app/features/auth/presentation/screens/splash_screen.dart';
-import 'package:rhema_app/features/feed/presentation/screens/feed_screen.dart';
+import 'package:rhema_app/features/feed/presentation/screens/feed_screen.dart'; // Mantido para referência futura
+import 'package:rhema_app/features/feed/presentation/screens/feed_screen_v2.dart';
 import 'package:rhema_app/features/profile/presentation/screens/profile_screen.dart';
 import 'package:rhema_app/features/search/presentation/screens/search_screen.dart';
 import 'package:rhema_app/features/upload/presentation/screens/upload_screen.dart';
@@ -28,11 +29,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const AuthScreen(),
       ),
       
-      // Feed Principal
+      // Feed Principal (V2 - Mockado)
       GoRoute(
         path: '/feed',
         name: 'feed',
-        builder: (context, state) => const FeedScreen(),
+        builder: (context, state) => const FeedScreenV2(),
       ),
       
       // Busca
