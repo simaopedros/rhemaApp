@@ -204,6 +204,25 @@ class _VideoCardState extends State<VideoCard> with TickerProviderStateMixin {
               ),
             ),
 
+          // Progress Indicator
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: _isInitialized && _videoController != null
+                ? VideoProgressIndicator(
+                    _videoController!,
+                    allowScrubbing: false,
+                    padding: EdgeInsets.zero,
+                    colors: const VideoProgressColors(
+                      playedColor: RhemaColors.gold, // Usando a cor dourada do tema
+                      backgroundColor: Colors.grey,
+                      bufferedColor: Colors.white24,
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+
           // 4. Content Content (Bottom)
           Positioned(
             left: 16,
