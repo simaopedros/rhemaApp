@@ -203,13 +203,10 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    'RHEMA',
-                    style: TextStyle(
-                      color: RhemaColors.gold,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  Image.asset(
+                    AssetConstants.logoTransparent,
+                    height: 32,
+                    fit: BoxFit.contain,
                   ),
                 ],
               ),

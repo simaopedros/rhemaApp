@@ -38,6 +38,7 @@ class ApiConstants {
 class AssetConstants {
   // Imagens
   static const String logo = 'assets/images/logo.png';
+  static const String logoTransparent = 'assets/images/logo_transparent.png';
   static const String icon = 'assets/images/icon.png';
   static const String placeholder = 'assets/images/placeholder.png';
   
