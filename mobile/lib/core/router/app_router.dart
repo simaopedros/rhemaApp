@@ -33,7 +33,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/feed',
         name: 'feed',
-        builder: (context, state) => const FeedScreenV2(),
+        builder: (context, state) => const FeedScreen(),
       ),
       
       // Busca
