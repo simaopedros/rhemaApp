@@ -153,71 +153,89 @@ export const interactionRoutes = new Elysia({ prefix: '/interactions' })
     })
 
     // Curtir vídeo
-    .post('/like', async ({ jwt, headers, body }) => {
+    .post('/like', async ({ jwt, headers, body, set }) => {
         const authHeader = headers.authorization;
         if (!authHeader?.startsWith('Bearer ')) {
-            throw new Error('Não autorizado');
+            set.status = 401;
+            return { success: false, error: 'Não autorizado' };
         }
 
         const token = authHeader.slice(7);
         const payload = await jwt.verify(token);
         if (!payload || typeof payload.userId !== 'string') {
-            throw new Error('Token inválido');
+            set.status = 401;
+            return { success: false, error: 'Token inválido' };
         }
 
         const { videoId } = body;
 
-        // Verificar se já curtiu
-        const existing = await prisma.interaction.findUnique({
-            where: {
-                userId_videoId_type: {
-                    userId: payload.userId,
-                    videoId,
-                    type: InteractionType.LIKE,
-                }
-            }
-        });
+        try {
+            // Verificar se usuário existe (sanidade)
+            // const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+            // Não é estritamente necessário se o token é válido, mas ajuda a evitar FK errors
 
-        if (existing) {
-            // Descurtir
+            // Verificar se já curtiu
+            const existing = await prisma.interaction.findUnique({
+                where: {
+                    userId_videoId_type: {
+                        userId: payload.userId,
+                        videoId,
+                        type: InteractionType.LIKE,
+                    }
+                }
+            });
+
+            if (existing) {
+                // Descurtir
+                await prisma.$transaction([
+                    prisma.interaction.delete({
+                        where: { id: existing.id }
+                    }),
+                    prisma.video.update({
+                        where: { id: videoId },
+                        data: {
+                            likesCount: { decrement: 1 },
+                            score: { decrement: POINTS.LIKE }
+                        }
+                    })
+                ]);
+
+                return { success: true, liked: false };
+            }
+
+            // Curtir
             await prisma.$transaction([
-                prisma.interaction.delete({
-                    where: { id: existing.id }
+                prisma.interaction.create({
+                    data: {
+                        userId: payload.userId,
+                        videoId,
+                        type: InteractionType.LIKE,
+                    }
                 }),
                 prisma.video.update({
                     where: { id: videoId },
                     data: {
-                        likesCount: { decrement: 1 },
-                        score: { decrement: POINTS.LIKE }
+                        likesCount: { increment: 1 },
+                        score: { increment: POINTS.LIKE }
                     }
                 })
             ]);
 
-            return { success: true, liked: false };
+            // ATUALIZAR VETOR (peso 10% - Like é sinal claro)
+            // Fire and forget, don't await blocking response
+            updateUserInterest(payload.userId, videoId, INTEREST_WEIGHTS.LIKE).catch(err => {
+                console.error('Background vector update failed:', err);
+            });
+
+            return { success: true, liked: true };
+        } catch (e: any) {
+            console.error('Erro ao curtir vídeo:', e);
+            set.status = 500;
+            return {
+                success: false,
+                error: e.message || 'Erro interno ao processar curtida'
+            };
         }
-
-        // Curtir
-        await prisma.$transaction([
-            prisma.interaction.create({
-                data: {
-                    userId: payload.userId,
-                    videoId,
-                    type: InteractionType.LIKE,
-                }
-            }),
-            prisma.video.update({
-                where: { id: videoId },
-                data: {
-                    likesCount: { increment: 1 },
-                    score: { increment: POINTS.LIKE }
-                }
-            })
-        ]);
-
-        // ATUALIZAR VETOR (peso 10% - Like é sinal claro)
-        updateUserInterest(payload.userId, videoId, INTEREST_WEIGHTS.LIKE);
-
-        return { success: true, liked: true };
     }, {
         body: t.Object({
             videoId: t.String()

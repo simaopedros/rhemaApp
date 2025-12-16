@@ -221,13 +221,13 @@ Este arquivo contém todas as etapas detalhadas para o desenvolvimento do projet
     - [x] Definir Schema `Video` (id, url, status, duração, **embedding**)
     - [x] Definir Schema `Interaction` (likes, views)
     - [x] Rodar migração inicial (`prisma db push`) e Seed
-- [ ] **API de Autenticação (Google Only)**
-    - [ ] Instalar biblioteca de validação Google Auth(utilizar firebase para autenticação)
-    - [ ] Endpoint `POST /auth/google`:
-        - [ ] Validar ID Token do Google
-        - [ ] Verificar se email existe no Banco
-        - [ ] Criar usuario se não existir (Auto-register)
-        - [ ] Retornar JWT da aplicação
+- [x] **API de Autenticação (Google Only)**
+    - [x] Instalar biblioteca de validação Google Auth(utilizar firebase para autenticação)
+    - [x] Endpoint `POST /auth/google`:
+        - [x] Validar ID Token do Google
+        - [x] Verificar se email existe no Banco
+        - [x] Criar usuario se não existir (Auto-register)
+        - [x] Retornar JWT da aplicação
     - [ ] Middleware de Proteção de Rotas (Validar JWT App)
 - [x] **API de Vídeos (Básico)**
     - [x] Endpoint `POST /videos/upload` (Gerar Assinatura Bunny.net)

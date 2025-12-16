@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:rhema_app/core/constants/constants.dart';
+import 'dart:math' as math;
 
 /// Provider do cliente HTTP Dio
 final dioProvider = Provider<Dio>((ref) {
@@ -80,13 +81,15 @@ abstract class ApiService {
       case DioExceptionType.connectionError:
         return 'Sem conexão com a internet.';
       case DioExceptionType.badResponse:
+        final statusCode = e.response?.statusCode;
         final data = e.response?.data;
         if (data is Map && data['error'] != null) {
           return data['error'];
         }
-        return 'Erro no servidor. Tente novamente.';
+        // Fallback with debug info
+        return 'Erro ($statusCode) no servidor. ${data != null ? data.toString().substring(0, math.min(50, data.toString().length)) : ''}';
       default:
-        return 'Ocorreu um erro inesperado.';
+        return 'Erro inesperado: ${e.message}';
     }
   }
 }

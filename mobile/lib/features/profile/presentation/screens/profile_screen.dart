@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:rhema_app/core/theme/app_theme.dart';
 import 'package:rhema_app/features/profile/presentation/providers/profile_controller.dart';
+import 'package:rhema_app/features/auth/data/auth_service.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:rhema_app/core/constants/constants.dart';
 import 'package:rhema_app/features/feed/data/models/video_model.dart';
 import 'package:rhema_app/features/profile/data/models/user_profile_model.dart';
 
@@ -34,6 +37,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   }
 
   bool get _isOwnProfile => widget.userId == null || widget.userId == 'me';
+
+  Future<void> _handleLogout() async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    try {
+      final authService = ref.read(authServiceProvider);
+      await authService.signOut();
+      
+      // Limpar token do storage
+      const storage = FlutterSecureStorage();
+      await storage.delete(key: StorageKeys.authToken);
+      await storage.delete(key: StorageKeys.userId);
+      
+      if (mounted) {
+        context.go('/auth');
+      }
+    } catch (e) {
+      if (mounted) {
+        scaffoldMessenger.showSnackBar(
+           SnackBar(content: Text('Erro ao sair: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,19 +98,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     }
 
     return Scaffold(
-      backgroundColor: RhemaColors.feedBackground,
+      backgroundColor: RhemaColors.primary50,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         leading: widget.userId != null
             ? IconButton(
                 onPressed: () => context.pop(),
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                icon: const Icon(Icons.arrow_back, color: RhemaColors.primary900),
               )
             : null,
         title: Text(
           user.handle,
           style: const TextStyle(
-            color: Colors.white,
+            color: RhemaColors.primary900,
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
@@ -93,10 +119,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         actions: [
           if (_isOwnProfile)
             IconButton(
-              onPressed: () {
-                // TODO: Configurações
-              },
-              icon: const Icon(Icons.menu, color: Colors.white),
+              onPressed: _handleLogout,
+              icon: const Icon(Icons.logout, color: RhemaColors.error),
             ),
         ],
       ),
@@ -139,7 +163,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     ? CachedNetworkImageProvider(user.avatar!) 
                     : null,
                 child: user.avatar == null 
-                    ? Text(user.name[0].toUpperCase(), style: const TextStyle(fontSize: 32))
+                    ? Text(user.name[0].toUpperCase(), style: const TextStyle(fontSize: 32, color: RhemaColors.primary900))
                     : null,
               ),
               if (user.isVerified)
@@ -151,7 +175,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     decoration: BoxDecoration(
                       color: RhemaColors.gold,
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.black, width: 2),
+                      border: Border.all(color: RhemaColors.primary50, width: 2),
                     ),
                     child: const Icon(
                       Icons.check,
@@ -168,7 +192,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           Text(
             user.name,
             style: const TextStyle(
-              color: Colors.white,
+              color: RhemaColors.primary900,
               fontSize: 20,
               fontWeight: FontWeight.w700,
             ),
@@ -180,7 +204,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             Text(
               user.bio!,
               style: const TextStyle(
-                color: Colors.white70,
+                color: RhemaColors.primary600,
                 fontSize: 14,
               ),
               textAlign: TextAlign.center,
@@ -199,7 +223,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 width: 1,
                 height: 30,
                 margin: const EdgeInsets.symmetric(horizontal: 24),
-                color: Colors.white24,
+                color: RhemaColors.primary300,
               ),
               _buildStat(
                 _formatNumber(user.followersCount),
@@ -209,7 +233,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 width: 1,
                 height: 30,
                 margin: const EdgeInsets.symmetric(horizontal: 24),
-                color: Colors.white24,
+                color: RhemaColors.primary300,
               ),
               _buildStat(
                 _formatNumber(user.followingCount),
@@ -265,7 +289,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         Text(
           value,
           style: const TextStyle(
-            color: Colors.white,
+            color: RhemaColors.primary900,
             fontSize: 20,
             fontWeight: FontWeight.w700,
           ),
@@ -274,7 +298,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         Text(
           label,
           style: TextStyle(
-            color: Colors.white60,
+            color: RhemaColors.primary500,
             fontSize: 12,
           ),
         ),
@@ -289,7 +313,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     required VoidCallback onTap,
   }) {
     return Material(
-      color: isPrimary ? RhemaColors.gold : Colors.transparent,
+      color: isPrimary ? RhemaColors.gold : Colors.white,
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         onTap: onTap,
@@ -298,7 +322,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            border: isPrimary ? null : Border.all(color: Colors.white30),
+            border: isPrimary ? null : Border.all(color: RhemaColors.primary300),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -306,13 +330,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               Icon(
                 icon,
                 size: 18,
-                color: isPrimary ? Colors.black : Colors.white,
+                color: isPrimary ? Colors.black : RhemaColors.primary900,
               ),
               const SizedBox(width: 8),
               Text(
                 label,
                 style: TextStyle(
-                  color: isPrimary ? Colors.black : Colors.white,
+                  color: isPrimary ? Colors.black : RhemaColors.primary900,
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
                 ),
@@ -329,7 +353,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       return const Center(
         child: Text(
           'Nenhum vídeo publicado',
-          style: TextStyle(color: Colors.white54),
+          style: TextStyle(color: RhemaColors.primary400),
         ),
       );
     }
@@ -355,34 +379,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.lock_outline, size: 48, color: Colors.white24),
+          Icon(Icons.lock_outline, size: 48, color: RhemaColors.primary300),
           SizedBox(height: 16),
           Text(
             'Vídeos curtidos são privados',
-            style: TextStyle(color: Colors.white54),
+            style: TextStyle(color: RhemaColors.primary400),
           ),
         ],
       ),
     );
   }
 
+  // ... _buildVideoThumbnail kept mostly same but check icon colors if any overlay ...
+  // Actually, video thumbnails have white text overlay on video image. That should remain WHITE for contrast.
   Widget _buildVideoThumbnail(VideoModel video) {
-    // Note: VideoModel doesn't have status yet, so assuming READY for now unless we add it to model
-    // Update: VideoModel was checked in step 153, it DOES NOT have status exposed in constructor explicitly?
-    // Wait, let's check step 153 output.
-    // Line 60: views: json['views'] as String? ?? '0'
-    // It doesn't seem to have 'status' field in the Dart model.
-    // The backend returns it. I might need to update VideoModel to include status if I want to show "Processing".
-    // For now, I'll assume READY or use a workaround if needed.
-    
-    // Actually, I should update VideoModel to include 'status' enum/string. 
-    // Doing strict typed access here.
-    
-    // Temporarily assuming READY since model update is another step. 
-    // Or I can add it now.
-    
-    return GestureDetector(
-      onTap: () => context.push('/video/${video.id}'),
+     return GestureDetector(
+      onTap: () => context.push(
+        '/video/${video.id}',
+        extra: video,
+      ),
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -390,9 +405,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             imageUrl: video.thumbnailUrl ?? video.videoUrl,
             fit: BoxFit.cover,
             placeholder: (_, __) => Container(
-              color: RhemaColors.cardBackground,
+              color: RhemaColors.primary200, // Light placeholder
             ),
-            errorWidget: (_,__,___) => Container(color: Colors.grey[900]),
+            errorWidget: (_,__,___) => Container(color: Colors.grey[400]),
           ),
           
           Positioned(
@@ -402,14 +417,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               children: [
                 const Icon(
                   Icons.play_arrow,
-                  color: Colors.white,
+                  color: Colors.white, // Keep white on image
                   size: 16,
                 ),
                 const SizedBox(width: 2),
                 Text(
                   video.views,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Colors.white, // Keep white on image
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
@@ -421,7 +436,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       ),
     );
   }
-
+  
   String _formatNumber(int number) {
     if (number >= 1000000) {
       return '${(number / 1000000).toStringAsFixed(1)}M';
@@ -441,13 +456,13 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   @override
   Widget build(context, shrinkOffset, overlapsContent) {
     return Container(
-      color: RhemaColors.feedBackground,
+      color: RhemaColors.primary50, // Light background
       child: TabBar(
         controller: tabController,
         indicatorColor: RhemaColors.gold,
         indicatorWeight: 2,
-        labelColor: Colors.white,
-        unselectedLabelColor: Colors.white54,
+        labelColor: RhemaColors.primary900,
+        unselectedLabelColor: RhemaColors.primary500,
         tabs: const [
           Tab(icon: Icon(Icons.grid_on)),
           Tab(icon: Icon(Icons.favorite_border)),

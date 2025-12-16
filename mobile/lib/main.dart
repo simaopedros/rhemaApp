@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rhema_app/core/theme/app_theme.dart';
@@ -6,6 +7,12 @@ import 'package:rhema_app/core/router/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    print("⚠️ Erro ao inicializar Firebase (Verifique se google-services.json existe): $e");
+  }
   
   // Configurar orientação e estilo da barra de status
   await SystemChrome.setPreferredOrientations([

@@ -8,6 +8,7 @@ import 'package:rhema_app/features/profile/presentation/screens/profile_screen.d
 import 'package:rhema_app/features/search/presentation/screens/search_screen.dart';
 import 'package:rhema_app/features/upload/presentation/screens/upload_screen.dart';
 import 'package:rhema_app/features/video/presentation/screens/video_player_screen.dart';
+import 'package:rhema_app/features/feed/data/models/video_model.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -69,7 +70,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'video',
         builder: (context, state) {
           final videoId = state.pathParameters['videoId']!;
-          return VideoPlayerScreen(videoId: videoId);
+          final video = state.extra as VideoModel?;
+          return VideoPlayerScreen(videoId: videoId, video: video);
         },
       ),
     ],

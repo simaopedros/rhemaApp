@@ -1,4 +1,4 @@
-package com.rhema.rhema_app
+package br.app.rhema
 
 import io.flutter.embedding.android.FlutterActivity
 

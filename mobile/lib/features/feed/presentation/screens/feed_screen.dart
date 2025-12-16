@@ -70,24 +70,44 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     }
   }
 
-  void _toggleLike(VideoModel video) {
+  void _toggleLike(VideoModel video) async {
+    final previousState = video.isLiked;
+    final previousCount = video.likes;
+
     // Optimistic UI Update
     setState(() {
       video.isLiked = !video.isLiked;
+      video.likes += video.isLiked ? 1 : -1;
     });
     
     // API Call
-    ref.read(interactionRepositoryProvider).likeVideo(video.id).catchError((e) {
+    try {
+      final isLikedServer = await ref.read(interactionRepositoryProvider).likeVideo(video.id);
+      
+      // Sync strictly if needed, but optimistic is usually fine for UX
+      // If server returns different state, we might want to correct it
+      if (mounted && isLikedServer != video.isLiked) {
+         setState(() {
+           // Correcting based on server response if desync happens
+           video.isLiked = isLikedServer;
+           // We'd ideally fetch fresh count or infer correction
+           video.likes += isLikedServer ? 1 : -1; 
+           // NOTE: The above correction logic assumes we were wrong by 1 step. 
+           // A full fresh fetch would be safer but overkill.
+         });
+      }
+    } catch (e) {
       // Revert on error
       if (mounted) {
         setState(() {
-          video.isLiked = !video.isLiked;
+          video.isLiked = previousState;
+          video.likes = previousCount;
         });
         ScaffoldMessenger.of(context).showSnackBar(
            SnackBar(content: Text('Erro ao curtir: $e')),
         );
       }
-    });
+    }
   }
 
   @override
@@ -101,14 +121,16 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           // Feed de vídeos (PageView horizontal)
           feedState.when(
             data: (videos) {
-              if (videos.isEmpty) {
-                return const Center(
-                  child: Text(
-                    'Nenhum vídeo encontrado',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                );
-              }
+                if (videos.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      'Nenhum vídeo encontrado',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  );
+                }
+                
+                print('DEBUG: Feed loaded with ${videos.length} videos. PageView should scroll.');
 
               // Pré-carregar os primeiros vídeos na inicialização
               WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -116,12 +138,26 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               });
 
               return PageView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
                 controller: _pageController,
                 scrollDirection: Axis.horizontal,
                 itemCount: videos.length,
                 onPageChanged: (index) {
                   setState(() => _currentIndex = index);
                   
+                  // Register View
+                  // We delay slightly to ensure user is actually watching
+                  final currentVideo = videos[index];
+                  Future.delayed(const Duration(seconds: 1), () {
+                    if (mounted && _currentIndex == index) {
+                      ref.read(interactionRepositoryProvider).registerView(
+                        currentVideo.id,
+                        watchTime: 1,
+                        duration: currentVideo.duration,
+                      );
+                    }
+                  });
+
                   // Pré-carregar próximos vídeos para reprodução instantânea
                   _preloadNextVideos(videos, index);
                   
@@ -288,7 +324,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             child: Container(
               height: MediaQuery.of(context).size.height * 0.6,
               decoration: const BoxDecoration(
-                color: RhemaColors.cardBackground,
+                color: RhemaColors.primary50,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
               child: Column(
@@ -299,7 +335,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                     height: 4,
                     margin: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
-                      color: Colors.white24,
+                      color: RhemaColors.primary300,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -312,19 +348,19 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                         const Text(
                           'Comentários',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: RhemaColors.primary900,
                             fontWeight: FontWeight.w600,
                             fontSize: 16,
                           ),
                         ),
                         IconButton(
                           onPressed: () => setState(() => _showComments = false),
-                          icon: const Icon(Icons.close, color: Colors.white54),
+                          icon: const Icon(Icons.close, color: RhemaColors.primary500),
                         ),
                       ],
                     ),
                   ),
-                  const Divider(color: Colors.white12),
+                  const Divider(color: RhemaColors.primary200),
                   
                   // Lista de comentários
                   Expanded(
@@ -333,7 +369,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                         : commentsState.comments.isEmpty
                             ? const Center(
                                 child: Text("Sem comentários ainda. Seja o primeiro!",
-                                    style: TextStyle(color: Colors.white54)))
+                                    style: TextStyle(color: RhemaColors.primary400)))
                             : ListView.builder(
                                 padding: const EdgeInsets.symmetric(horizontal: 16),
                                 itemCount: commentsState.comments.length,
@@ -351,7 +387,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                                             ? NetworkImage(user['avatar']) 
                                             : null,
                                           child: user['avatar'] == null 
-                                            ? Text(user['name'][0].toUpperCase()) 
+                                            ? Text(user['name'][0].toUpperCase(), style: const TextStyle(color: RhemaColors.primary900)) 
                                             : null,
                                         ),
                                         const SizedBox(width: 12),
@@ -362,7 +398,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                                               Text(
                                                 user['handle'],
                                                 style: const TextStyle(
-                                                  color: Colors.white70,
+                                                  color: RhemaColors.primary600,
                                                   fontSize: 12,
                                                   fontWeight: FontWeight.bold,
                                                 ),
@@ -370,22 +406,22 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                                               const SizedBox(height: 4),
                                               Text(
                                                 comment['text'],
-                                                style: const TextStyle(color: Colors.white),
+                                                style: const TextStyle(color: RhemaColors.primary900),
                                               ),
                                               const SizedBox(height: 4),
                                               Text(
                                                 DateFormat('dd/MM • HH:mm').format(DateTime.parse(comment['createdAt'])),
-                                                style: TextStyle(color: Colors.white38, fontSize: 10),
+                                                style: const TextStyle(color: RhemaColors.primary400, fontSize: 10),
                                               ),
                                             ],
                                           ),
                                         ),
                                         Column(
                                           children: [
-                                            Icon(Icons.favorite_border, size: 16, color: Colors.white54),
+                                            const Icon(Icons.favorite_border, size: 16, color: RhemaColors.primary400),
                                             Text(
                                               comment['likesCount'].toString(),
-                                              style: TextStyle(color: Colors.white54, fontSize: 10),
+                                              style: const TextStyle(color: RhemaColors.primary400, fontSize: 10),
                                             ),
                                           ],
                                         ),
@@ -405,27 +441,27 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                       top: 8,
                     ),
                     decoration: const BoxDecoration(
-                      border: Border(top: BorderSide(color: Colors.white12)),
-                      color: RhemaColors.cardBackground, 
+                      border: Border(top: BorderSide(color: RhemaColors.primary200)),
+                      color: RhemaColors.primary50, 
                     ),
                     child: Row(
                       children: [
                         const CircleAvatar(
                           radius: 18,
-                          backgroundColor: RhemaColors.primary600,
-                          child: Icon(Icons.person, color: Colors.white, size: 20),
+                          backgroundColor: RhemaColors.primary200,
+                          child: Icon(Icons.person, color: RhemaColors.primary500, size: 20),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: TextField(
                             controller: _commentInputController,
-                            style: const TextStyle(color: Colors.white),
+                            style: const TextStyle(color: RhemaColors.primary900),
                             decoration: InputDecoration(
                               hintText: 'Adicione um comentário...',
-                              hintStyle: TextStyle(color: Colors.white38),
+                              hintStyle: const TextStyle(color: RhemaColors.primary400),
                               border: InputBorder.none,
                               filled: true,
-                              fillColor: Colors.white10,
+                              fillColor: Colors.white,
                               contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 12),
                               enabledBorder: OutlineInputBorder(
@@ -448,7 +484,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                                FocusScope.of(context).unfocus();
                              }
                           },
-                          icon: Icon(Icons.send, color: RhemaColors.gold),
+                          icon: const Icon(Icons.send, color: RhemaColors.gold),
                         ),
                       ],
                     ),
@@ -478,7 +514,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 bottom: MediaQuery.of(context).padding.bottom + 16,
               ),
               decoration: const BoxDecoration(
-                color: RhemaColors.cardBackground,
+                color: RhemaColors.primary50,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
               child: Column(
@@ -489,7 +525,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                     height: 4,
                     margin: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
-                      color: Colors.white24,
+                      color: RhemaColors.primary300,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -529,15 +565,16 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           width: 56,
           height: 56,
           decoration: BoxDecoration(
-            color: Colors.white10,
+            color: Colors.white,
             borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: RhemaColors.primary100),
           ),
-          child: Icon(icon, color: Colors.white, size: 26),
+          child: Icon(icon, color: RhemaColors.primary800, size: 26),
         ),
         const SizedBox(height: 8),
         Text(
           label,
-          style: TextStyle(color: Colors.white70, fontSize: 12),
+          style: const TextStyle(color: RhemaColors.primary700, fontSize: 12),
           textAlign: TextAlign.center,
         ),
       ],

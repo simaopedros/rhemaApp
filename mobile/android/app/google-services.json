@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "191691248376",
+    "project_id": "rhema-44d76",
+    "storage_bucket": "rhema-44d76.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:191691248376:android:3af6edab17f76c19fbe10d",
+        "android_client_info": {
+          "package_name": "br.app.rhema"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "191691248376-ipl94vdforlv3hh90mr15m3fig85vrct.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "br.app.rhema",
+            "certificate_hash": "0a355b6ac01273c52fc4f6d1fdc77d6fea98a601"
+          }
+        },
+        {
+          "client_id": "191691248376-tdrpdle8usephhljql7tk4315l8c5rbh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4CISzfsoYevbz9R3mO2RuNFPET-81wro"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "191691248376-tdrpdle8usephhljql7tk4315l8c5rbh.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

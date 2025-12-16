@@ -140,32 +140,31 @@ class _VideoCardState extends State<VideoCard> with TickerProviderStateMixin {
     final user = widget.video.user;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     
-    return GestureDetector(
-      onTap: widget.onTap,
-      onDoubleTap: _handleDoubleTap,
-      onVerticalDragEnd: _handleVerticalDragEnd,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          // 1. Video Player or Thumbnail
-          if (_isInitialized && _videoController != null)
-            SizedBox.expand(
-              child: FittedBox(
-                fit: BoxFit.cover,
-                child: SizedBox(
-                  width: _videoController!.value.size.width,
-                  height: _videoController!.value.size.height,
-                  child: VideoPlayer(_videoController!),
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // 1. Video Player or Thumbnail - Wrapped in IgnorePointer to fix PageView scroll
+        IgnorePointer(
+          child: _isInitialized && _videoController != null
+              ? SizedBox.expand(
+                  child: FittedBox(
+                    fit: BoxFit.cover,
+                    child: SizedBox(
+                      width: _videoController!.value.size.width,
+                      height: _videoController!.value.size.height,
+                      child: VideoPlayer(_videoController!),
+                    ),
+                  ),
+                )
+              : CachedNetworkImage(
+                  imageUrl: widget.video.thumbnailUrl ?? widget.video.videoUrl,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(color: Colors.black),
+                  errorWidget: (context, url, err) => Container(color: Colors.black),
                 ),
-              ),
-            )
-          else
-            CachedNetworkImage(
-              imageUrl: widget.video.thumbnailUrl ?? widget.video.videoUrl,
-              fit: BoxFit.cover,
-              placeholder: (context, url) => Container(color: Colors.black),
-              errorWidget: (context, url, err) => Container(color: Colors.black),
-            ),
+        ),
+
+
 
           // 2. Double Tap Heart Animation
           if (_showDoubleTapHeart)
@@ -198,6 +197,14 @@ class _VideoCardState extends State<VideoCard> with TickerProviderStateMixin {
               ),
             ),
           ),
+
+        // 2. Gesture Detector Layer (MOVED HERE TO BE ABOVE GRADIENT)
+        GestureDetector(
+          behavior: HitTestBehavior.opaque, // Opaque to catch taps on transparent areas
+          onTap: widget.onTap,
+          onDoubleTap: _handleDoubleTap,
+          child: Container(color: Colors.transparent),
+        ),
 
           // 4. Content Area
           Positioned(
@@ -338,7 +345,6 @@ class _VideoCardState extends State<VideoCard> with TickerProviderStateMixin {
             ),
           ),
         ],
-      ),
     );
   }
 }

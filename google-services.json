@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "191691248376",
+    "project_id": "rhema-44d76",
+    "storage_bucket": "rhema-44d76.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:191691248376:android:3af6edab17f76c19fbe10d",
+        "android_client_info": {
+          "package_name": "br.app.rhema"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4CISzfsoYevbz9R3mO2RuNFPET-81wro"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

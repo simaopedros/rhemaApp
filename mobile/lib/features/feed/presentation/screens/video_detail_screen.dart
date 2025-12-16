@@ -4,25 +4,60 @@ import 'package:rhema_app/core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rhema_app/features/feed/data/models/video_model.dart';
 
-class VideoDetailScreen extends StatelessWidget {
+import 'package:video_player/video_player.dart';
+
+class VideoDetailScreen extends StatefulWidget {
   final VideoModel video;
 
   const VideoDetailScreen({super.key, required this.video});
 
   @override
+  State<VideoDetailScreen> createState() => _VideoDetailScreenState();
+}
+
+class _VideoDetailScreenState extends State<VideoDetailScreen> {
+  late VideoPlayerController _controller;
+  bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializePlayer();
+  }
+
+  Future<void> _initializePlayer() async {
+    final isParent = widget.video.parentVideo != null;
+    final url = isParent ? widget.video.parentVideo!.videoUrl : widget.video.videoUrl;
+    
+    _controller = VideoPlayerController.networkUrl(Uri.parse(url));
+
+    try {
+      await _controller.initialize();
+      await _controller.play();
+      setState(() {
+        _isInitialized = true;
+      });
+    } catch (e) {
+      print('Error initializing detail player: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final video = widget.video;
     final user = video.user;
     
-    // Logic to use Parent Video (Original) if available
     final isParent = video.parentVideo != null;
-    final displayVideoUrl = isParent ? video.parentVideo!.videoUrl : video.videoUrl;
-    final displayThumbnailUrl = isParent 
-        ? (video.parentVideo?.thumbnailUrl ?? video.thumbnailUrl ?? video.videoUrl)
-        : (video.thumbnailUrl ?? video.videoUrl);
     final displayDescription = isParent ? (video.parentVideo?.description ?? video.description) : video.description;
     
     return Scaffold(
-      backgroundColor: Colors.grey[50], // rhema-50
+      backgroundColor: Colors.grey[50],
       body: Column(
         children: [
           // Header
@@ -60,7 +95,7 @@ class VideoDetailScreen extends StatelessWidget {
                 Text(
                   'Rhēma Player',
                   style: TextStyle(
-                    fontFamily: 'Serif', // Fallback if 'Sentient' not avail
+                    fontFamily: 'Serif',
                     fontStyle: FontStyle.italic,
                     fontWeight: FontWeight.w600,
                     color: RhemaColors.primary900,
@@ -79,52 +114,44 @@ class VideoDetailScreen extends StatelessWidget {
                 children: [
                   // Main Video Area
                   AspectRatio(
-                    aspectRatio: 16 / 9,
+                    aspectRatio: _isInitialized ? _controller.value.aspectRatio : 16 / 9,
                     child: Stack(
+                      alignment: Alignment.center,
                       children: [
-                        Container(
-                          width: double.infinity,
-                          color: Colors.black,
-                          child: Opacity(
-                            opacity: 0.9,
-                            child: CachedNetworkImage(
-                              imageUrl: displayThumbnailUrl, // Shows parent thumbnail if available
-                              fit: BoxFit.cover,
+                        if (_isInitialized)
+                          VideoPlayer(_controller)
+                        else
+                          Container(color: Colors.black, child: const Center(child: CircularProgressIndicator())),
+                        
+                        // Play/Pause Overlay
+                        if (_isInitialized)
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _controller.value.isPlaying ? _controller.pause() : _controller.play();
+                              });
+                            },
+                            child: Container(
+                              color: Colors.transparent,
+                              child: Center(
+                                child: !_controller.value.isPlaying
+                                    ? Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withOpacity(0.5),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(Icons.play_arrow, color: Colors.white, size: 32),
+                                      )
+                                    : const SizedBox(),
+                              ),
                             ),
                           ),
-                        ),
-                        Center(
-                          child: Container(
-                             width: 64,
-                             height: 64,
-                             decoration: BoxDecoration(
-                               color: Colors.white.withOpacity(0.2),
-                               shape: BoxShape.circle,
-                               border: Border.all(color: Colors.white.withOpacity(0.4)),
-                             ),
-                             child: const Icon(Icons.play_arrow, color: Colors.white, size: 32),
-                           ),
-                        ),
-                        // Progress Bar
-                        Positioned(
-                          bottom: 0,
-                          left: 0,
-                          right: 0,
-                          child: Container(
-                            height: 4,
-                            color: Colors.grey[700],
-                            child: FractionallySizedBox(
-                              alignment: Alignment.centerLeft,
-                              widthFactor: 0.33,
-                              child: Container(color: RhemaColors.gold),
-                            ),
-                          ),
-                        ),
                       ],
                     ),
                   ),
 
-                  // Info Section
+                  // Info Section (Rest of the code remains similar but adapted to widget.video)
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
@@ -177,7 +204,7 @@ class VideoDetailScreen extends StatelessWidget {
                                       ],
                                     ),
                                     const Text(
-                                      '12.4k seguidores', // Mock
+                                      '12.4k seguidores',
                                       style: TextStyle(color: Colors.grey, fontSize: 12),
                                     ),
                                   ],
@@ -227,7 +254,7 @@ class VideoDetailScreen extends StatelessWidget {
                     ),
                   ),
 
-                  // Suggestions
+                  // Suggestions (Placeholder)
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -286,7 +313,6 @@ class VideoDetailScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-
                 ],
               ),
             ),

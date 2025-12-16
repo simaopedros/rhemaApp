@@ -53,17 +53,17 @@
     - [x] Upload Screen
     - [x] Video Player Screen (horizontal)
 - [ ] **Integrações**
-    - [ ] Conectar com API backend
+    - [x] Conectar com API backend
     - [ ] Google Sign-In real
-    - [ ] Video Player real (chewie)
+    - [x] Video Player real (video_player)
 
 ## FASE 4: Próximos Passos
-- [ ] Instalar dependências do backend (`bun install`)
-- [ ] Configurar PostgreSQL local
-- [ ] Rodar migrações do Prisma
-- [ ] Instalar dependências do Flutter (`flutter pub get`)
-- [ ] Baixar fontes (Plus Jakarta Sans, Playfair Display)
-- [ ] Testar app no emulador
+- [x] Instalar dependências do backend (`bun install`)
+- [x] Configurar PostgreSQL local
+- [x] Rodar migrações do Prisma
+- [x] Instalar dependências do Flutter (`flutter pub get`)
+- [x] Baixar fontes (Plus Jakarta Sans, Playfair Display)
+- [x] Testar app no emulador
 
 ## NOTAS
 - Logo e ícone já copiados para `mobile/assets/images/`

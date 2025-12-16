@@ -8,9 +8,9 @@ class VideoModel {
   final String? description;
   final List<String> tags;
   final int? duration;
-  final int likes;
-  final int comments;
-  final int shares;
+  int likes;
+  int comments;
+  int shares;
   final String views;
   final UserShortModel user;
   final String? postedAt;

@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rhema_app/core/theme/app_theme.dart';
+import 'package:rhema_app/core/network/api_client.dart';
+import 'package:rhema_app/core/constants/constants.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:rhema_app/features/auth/data/auth_service.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -38,21 +42,87 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
     super.dispose();
   }
 
-  Future<void> _handleGoogleSignIn() async {
+  Future<void> _handleDevLogin() async {
     setState(() => _isLoading = true);
     
     try {
-      // TODO: Implementar Google Sign-In real
-      await Future.delayed(const Duration(seconds: 1));
+      final dio = ref.read(dioProvider);
       
-      if (mounted) {
-        context.go('/feed');
+      // Call Dev Login Endpoint
+      final response = await dio.post(
+        ApiConstants.authDev,
+        data: {'email': 'dev@rhema.app'},
+      );
+      
+      final data = response.data;
+      if (data['success'] == true && data['token'] != null) {
+        // Save Token
+        final storage = const FlutterSecureStorage();
+        await storage.write(key: StorageKeys.authToken, value: data['token']);
+        await storage.write(key: StorageKeys.userId, value: data['user']['id']);
+        
+        if (mounted) {
+          context.go('/feed');
+        }
+      } else {
+        throw data['error'] ?? 'Login falhou';
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao fazer login: $e'),
+            content: Text('Erro ao fazer login (Dev): $e'),
+            backgroundColor: RhemaColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+  
+  Future<void> _handleGoogleLogin() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      final authService = ref.read(authServiceProvider);
+      final dio = ref.read(dioProvider);
+      
+      // 1. Login com Google/Firebase
+      final String? idToken = await authService.signInWithGoogle();
+      
+      if (idToken == null) {
+        // Usuário cancelou
+         if (mounted) setState(() => _isLoading = false);
+        return;
+      }
+
+      // 2. Enviar token para Backend
+      final response = await dio.post(
+        ApiConstants.authGoogle, // Certifique-se que essa constante existe e aponta para /auth/google
+        data: {'idToken': idToken},
+      );
+      
+      final data = response.data;
+      if (data['success'] == true && data['token'] != null) {
+        // 3. Salvar Token da App
+        final storage = const FlutterSecureStorage();
+        await storage.write(key: StorageKeys.authToken, value: data['token']);
+        await storage.write(key: StorageKeys.userId, value: data['user']['id']);
+        
+        if (mounted) {
+          context.go('/feed');
+        }
+      } else {
+        throw data['error'] ?? 'Falha na autenticação com servidor';
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro no login: $e'),
             backgroundColor: RhemaColors.error,
           ),
         );
@@ -173,7 +243,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
       children: [
         // Botão Google
         _AuthButton(
-          onPressed: _isLoading ? null : _handleGoogleSignIn,
+          onPressed: _isLoading ? null : _handleGoogleLogin,
           icon: Image.network(
             'https://www.svgrepo.com/show/475656/google-color.svg',
             width: 22,
@@ -190,12 +260,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
         
         // Botão Email
         _AuthButton(
-          onPressed: _isLoading ? null : () {
-            // TODO: Tela de login com email
-            context.go('/feed');
-          },
+          onPressed: _isLoading ? null : _handleDevLogin,
           icon: const Icon(Icons.mail_outline, size: 22, color: Colors.white),
-          label: 'Entrar com Email',
+          label: 'Entrar com Email (MOCK)',
           backgroundColor: RhemaColors.primary800,
           textColor: Colors.white,
           hasShadow: true,

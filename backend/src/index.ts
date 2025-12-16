@@ -9,6 +9,7 @@ import { videosRoutes } from './routes/videos';
 import { feedRoutes } from './routes/feed';
 import { userRoutes } from './routes/users';
 import { interactionRoutes } from './routes/interactions';
+import { searchRoutes } from './routes/search';
 import { processingWorker } from './services/processing-worker';
 
 const app = new Elysia({
@@ -43,6 +44,7 @@ const app = new Elysia({
     .use(feedRoutes)
     .use(userRoutes)
     .use(interactionRoutes)
+    .use(searchRoutes)
     // Error handling
     .onError(({ code, error }) => {
         const errMsg = (error as any)?.message || 'Unknown error';

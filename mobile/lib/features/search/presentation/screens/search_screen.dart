@@ -4,6 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:rhema_app/core/theme/app_theme.dart';
 
+import '../../../feed/data/models/video_model.dart';
+import '../../../profile/data/models/user_profile_model.dart';
+import '../providers/search_providers.dart';
+
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
 
@@ -16,90 +20,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   final _focusNode = FocusNode();
   String _searchQuery = '';
 
-  // Mock data
-  final List<String> _trendingTags = [
-    '#louvor',
-    '#testemunho',
-    '#devocional',
-    '#biblia',
-    '#igreja',
-    '#adoracao',
-    '#milagre',
-    '#jesus',
-    '#fe',
-    '#oracao',
-  ];
-
-  final List<Map<String, dynamic>> _suggestedUsers = [
-    {
-      'id': 'u1',
-      'name': 'Devocional Diário',
-      'handle': '@devocional_hoje',
-      'avatar': 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
-      'followers': '45k',
-      'isVerified': true,
-    },
-    {
-      'id': 'u2',
-      'name': 'Pastora Helena',
-      'handle': '@helena.pastora',
-      'avatar': 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100',
-      'followers': '98k',
-      'isVerified': true,
-    },
-    {
-      'id': 'u3',
-      'name': 'Lucas Guitar',
-      'handle': '@lucas_worship',
-      'avatar': 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100',
-      'followers': '8.2k',
-      'isVerified': false,
-    },
-  ];
-
-  final List<Map<String, dynamic>> _trendingVideos = [
-    {
-      'id': 'v1',
-      'thumbnail': 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?w=400',
-      'views': '45.2k',
-      'description': 'A paz que excede todo entendimento',
-    },
-    {
-      'id': 'v2',
-      'thumbnail': 'https://images.unsplash.com/photo-1510936111840-65e151ad71bb?w=400',
-      'views': '12.8k',
-      'description': 'Louvor espontâneo',
-    },
-    {
-      'id': 'v3',
-      'thumbnail': 'https://images.unsplash.com/photo-1507692049790-de58293a469d?w=400',
-      'views': '89.1k',
-      'description': 'Estudo de Romanos 8',
-    },
-    {
-      'id': 'v4',
-      'thumbnail': 'https://images.unsplash.com/photo-1510590337019-5ef2d39aa7bf?w=400',
-      'views': '1.2k',
-      'description': 'Bom dia com fé',
-    },
-    {
-      'id': 'v5',
-      'thumbnail': 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=400',
-      'views': '33.5k',
-      'description': 'Nascer do sol glorioso',
-    },
-    {
-      'id': 'v6',
-      'thumbnail': 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=400',
-      'views': '7.8k',
-      'description': 'Retiro espiritual',
-    },
-  ];
-
   @override
   void initState() {
     super.initState();
-    // _focusNode.requestFocus(); // Removed autofocus
   }
 
   @override
@@ -111,6 +34,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Sync local query with provider if needed, or just use local for UI instant feedback 
+    // and push to provider for API
+    
     return Scaffold(
       backgroundColor: RhemaColors.feedBackground,
       appBar: AppBar(
@@ -122,7 +48,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         title: _buildSearchField(),
         titleSpacing: 0,
       ),
-      body: _searchQuery.isEmpty ? _buildDiscoverContent() : _buildSearchResults(),
+      body: _searchQuery.isEmpty 
+          ? _buildDiscoverContent() 
+          : _buildSearchResults(),
     );
   }
 
@@ -149,96 +77,140 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   onPressed: () {
                     _searchController.clear();
                     setState(() => _searchQuery = '');
+                    ref.read(searchQueryProvider.notifier).state = '';
                   },
                   icon: Icon(Icons.close, color: Colors.white38, size: 20),
                 )
               : null,
         ),
-        onChanged: (value) => setState(() => _searchQuery = value),
+        onChanged: (value) {
+          setState(() => _searchQuery = value);
+          // Debounce could be good here, but for now direct update
+          ref.read(searchQueryProvider.notifier).state = value;
+        },
       ),
     );
   }
 
   Widget _buildDiscoverContent() {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Tags em alta
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Em alta',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _trendingTags
-                      .map((tag) => _buildTagChip(tag))
-                      .toList(),
-                ),
-              ],
-            ),
-          ),
+    final trendingAsync = ref.watch(trendingProvider);
 
-          const Divider(color: Colors.white12),
-
-          // Contas sugeridas
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Contas populares',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                ..._suggestedUsers.map((user) => _buildUserTile(user)),
-              ],
-            ),
-          ),
-
-          const Divider(color: Colors.white12),
-
-          // Vídeos em alta
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            child: const Text(
-              'Vídeos populares',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          _buildVideoGrid(),
-          const SizedBox(height: 32),
-        ],
+    return trendingAsync.when(
+      loading: () => const Center(
+        child: CircularProgressIndicator(color: RhemaColors.gold),
       ),
+      error: (error, stack) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white54, size: 48),
+            const SizedBox(height: 16),
+            Text(
+              'Erro ao carregar conteúdo',
+              style: TextStyle(color: Colors.white54),
+            ),
+            TextButton(
+              onPressed: () => ref.refresh(trendingProvider),
+              child: const Text('Tentar novamente', style: TextStyle(color: RhemaColors.gold)),
+            ),
+          ],
+        ),
+      ),
+      data: (data) {
+        final tags = data['tags'] as List<String>;
+        final users = data['users'] as List<UserProfileModel>;
+        final videos = data['videos'] as List<VideoModel>;
+
+        return SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Tags em alta
+              if (tags.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Em alta',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: tags
+                            .map((tag) => _buildTagChip(tag))
+                            .toList(),
+                      ),
+                    ],
+                  ),
+                ),
+
+              if (tags.isNotEmpty && users.isNotEmpty)
+                const Divider(color: Colors.white12),
+
+              // Contas sugeridas
+              if (users.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Contas populares',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ...users.map((user) => _buildUserTile(user)),
+                    ],
+                  ),
+                ),
+
+              if (users.isNotEmpty && videos.isNotEmpty)
+                const Divider(color: Colors.white12),
+
+              // Vídeos em alta
+              if (videos.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  child: const Text(
+                    'Vídeos populares',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                _buildVideoGrid(videos),
+                const SizedBox(height: 32),
+              ],
+            ],
+          ),
+        );
+      },
     );
   }
 
   Widget _buildTagChip(String tag) {
     return GestureDetector(
-      onTap: () => setState(() {
-        _searchController.text = tag;
-        _searchQuery = tag;
-      }),
+      onTap: () {
+        setState(() {
+          _searchController.text = tag;
+          _searchQuery = tag;
+        });
+        ref.read(searchQueryProvider.notifier).state = tag;
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
@@ -258,11 +230,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
-  Widget _buildUserTile(Map<String, dynamic> user) {
+  Widget _buildUserTile(UserProfileModel user) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: InkWell(
-        onTap: () => context.push('/profile/${user['id']}'),
+        onTap: () => context.push('/profile/${user.id}'),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(8),
@@ -270,7 +242,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             children: [
               CircleAvatar(
                 radius: 26,
-                backgroundImage: CachedNetworkImageProvider(user['avatar']),
+                backgroundImage: user.avatar != null
+                    ? CachedNetworkImageProvider(user.avatar!)
+                    : null,
+                child: user.avatar == null ? const Icon(Icons.person, color: Colors.white) : null,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -280,14 +255,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     Row(
                       children: [
                         Text(
-                          user['name'],
+                          user.name,
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
                             fontSize: 15,
                           ),
                         ),
-                        if (user['isVerified'] == true) ...[
+                        if (user.isVerified) ...[
                           const SizedBox(width: 4),
                           Icon(Icons.verified, color: RhemaColors.gold, size: 16),
                         ],
@@ -295,7 +270,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${user['handle']} · ${user['followers']} seguidores',
+                      '${user.handle} · ${user.followersCount} seguidores',
                       style: TextStyle(
                         color: Colors.white54,
                         fontSize: 13,
@@ -326,7 +301,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
-  Widget _buildVideoGrid() {
+  Widget _buildVideoGrid(List<VideoModel> videos) {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -337,17 +312,17 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         crossAxisSpacing: 2,
         childAspectRatio: 9 / 16,
       ),
-      itemCount: _trendingVideos.length,
+      itemCount: videos.length,
       itemBuilder: (context, index) {
-        final video = _trendingVideos[index];
+        final video = videos[index];
         return _buildVideoTile(video);
       },
     );
   }
 
-  Widget _buildVideoTile(Map<String, dynamic> video) {
+  Widget _buildVideoTile(VideoModel video) {
     return GestureDetector(
-      onTap: () => context.push('/video/${video['id']}'),
+      onTap: () => context.push('/video/${video.id}'),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
@@ -357,10 +332,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: CachedNetworkImage(
-                imageUrl: video['thumbnail'],
-                fit: BoxFit.cover,
-              ),
+              child: video.thumbnailUrl != null
+                  ? CachedNetworkImage(
+                      imageUrl: video.thumbnailUrl!,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(color: Colors.white10),
+                      errorWidget: (context, url, error) => Container(color: Colors.white10),
+                    )
+                  : Container(color: Colors.black),
             ),
             // Gradiente
             Container(
@@ -384,23 +363,24 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    video['description'],
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+                  if (video.description != null)
+                    Text(
+                      video.description!,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
                       const Icon(Icons.play_arrow, color: Colors.white70, size: 14),
                       const SizedBox(width: 2),
                       Text(
-                        video['views'],
+                        video.views,
                         style: const TextStyle(
                           color: Colors.white70,
                           fontSize: 11,
@@ -418,87 +398,83 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   Widget _buildSearchResults() {
-    // Filtrar resultados pelo query
-    final filteredUsers = _suggestedUsers
-        .where((u) =>
-            u['name'].toString().toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            u['handle'].toString().toLowerCase().contains(_searchQuery.toLowerCase()))
-        .toList();
+    final searchAsync = ref.watch(searchResultsProvider);
 
-    final filteredVideos = _trendingVideos
-        .where((v) =>
-            v['description'].toString().toLowerCase().contains(_searchQuery.toLowerCase()))
-        .toList();
+    return searchAsync.when(
+      loading: () => const Center(
+        child: CircularProgressIndicator(color: RhemaColors.gold),
+      ),
+      error: (error, stack) => Center(
+        child: Text(
+          'Erro na busca',
+          style: TextStyle(color: Colors.white54),
+        ),
+      ),
+      data: (data) {
+        final filteredUsers = data['users'] as List<UserProfileModel>;
+        final filteredVideos = data['videos'] as List<VideoModel>;
 
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (filteredUsers.isNotEmpty) ...[
-            Padding(
-              padding: const EdgeInsets.all(16),
+        if (filteredUsers.isEmpty && filteredVideos.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(48),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Contas',
+                  Icon(Icons.search_off, size: 64, color: Colors.white24),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Nenhum resultado para "$_searchQuery"',
+                    style: TextStyle(color: Colors.white54),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (filteredUsers.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Contas',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ...filteredUsers.map((user) => _buildUserTile(user)),
+                    ],
+                  ),
+                ),
+              ],
+              if (filteredVideos.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: const Text(
+                    'Vídeos',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  ...filteredUsers.map((user) => _buildUserTile(user)),
-                ],
-              ),
-            ),
-          ],
-          if (filteredVideos.isNotEmpty) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: const Text(
-                'Vídeos',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
                 ),
-              ),
-            ),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(2),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 9 / 16,
-                mainAxisSpacing: 2,
-                crossAxisSpacing: 2,
-              ),
-              itemCount: filteredVideos.length,
-              itemBuilder: (context, index) => _buildVideoTile(filteredVideos[index]),
-            ),
-          ],
-          if (filteredUsers.isEmpty && filteredVideos.isEmpty)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(48),
-                child: Column(
-                  children: [
-                    Icon(Icons.search_off, size: 64, color: Colors.white24),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Nenhum resultado para "$_searchQuery"',
-                      style: TextStyle(color: Colors.white54),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-        ],
-      ),
+                _buildVideoGrid(filteredVideos),
+              ],
+            ],
+          ),
+        );
+      },
     );
   }
 }

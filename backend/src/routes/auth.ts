@@ -18,6 +18,51 @@ function generateHandle(name: string): string {
 }
 
 export const authRoutes = new Elysia({ prefix: '/auth' })
+    // Login de Desenvolvedor (Bypass Google)
+    .post('/dev', async ({ jwt, body }) => {
+        // Apenas permitir em desenvolvimento
+        /*if (process.env.NODE_ENV === 'production') {
+            throw new Error('Endpoint disponível apenas em desenvolvimento');
+        }*/
+
+        const { email } = body;
+
+        let user = await prisma.user.findUnique({ where: { email } });
+
+        if (!user) {
+            user = await prisma.user.create({
+                data: {
+                    email,
+                    name: 'Dev User',
+                    handle: generateHandle('Dev'),
+                    avatar: 'https://i.pravatar.cc/300',
+                }
+            });
+        }
+
+        const token = await jwt.sign({
+            userId: user.id,
+            email: user.email
+        });
+
+        return {
+            success: true,
+            token,
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                handle: user.handle,
+                avatar: user.avatar,
+                isVerified: user.isVerified,
+            }
+        };
+    }, {
+        body: t.Object({
+            email: t.String()
+        })
+    })
+
     // Login/Registro com Google
     .post('/google', async ({ jwt, body }) => {
         const { idToken } = body;
@@ -83,7 +128,20 @@ export const authRoutes = new Elysia({ prefix: '/auth' })
                 }
             };
         } catch (error) {
-            console.error('Erro na autenticação Google:', error);
+            console.error('------- DEBUG AUTH ERROR -------');
+            console.error('Env Client ID:', process.env.GOOGLE_CLIENT_ID);
+            console.error('Token recebido (inicio):', idToken.substring(0, 20) + '...');
+            console.error('Erro detalhado:', error);
+            try {
+                // Tenta decodificar sem verificar para ver o conteúdo
+                const header = JSON.parse(Buffer.from(idToken.split('.')[0], 'base64').toString());
+                const payload = JSON.parse(Buffer.from(idToken.split('.')[1], 'base64').toString());
+                console.error('Token Header:', header);
+                console.error('Token Payload:', payload);
+            } catch (e) {
+                console.error('Erro ao decodificar token para debug:', e);
+            }
+            console.error('--------------------------------');
             throw new Error('Falha na autenticação com Google');
         }
     }, {
