@@ -228,7 +228,7 @@ Este arquivo contém todas as etapas detalhadas para o desenvolvimento do projet
         - [x] Verificar se email existe no Banco
         - [x] Criar usuario se não existir (Auto-register)
         - [x] Retornar JWT da aplicação
-    - [ ] Middleware de Proteção de Rotas (Validar JWT App)
+    - [x] Middleware de Proteção de Rotas (Validar JWT App)
 - [x] **API de Vídeos (Básico)**
     - [x] Endpoint `POST /videos/upload` (Gerar Assinatura Bunny.net)
     - [x] Endpoint `GET /feed` (Lista simples inicial)
@@ -308,6 +308,11 @@ Este arquivo contém todas as etapas detalhadas para o desenvolvimento do projet
     - [x] Implementar Compartilhar (UI + Backend + Atualiza Vetor)
     - [x] Implementar Salvar (UI + Backend + Atualiza Vetor)
     - [x] Implementar Perfil de Usuário (Lista de vídeos publicados)
+- [x] **Social**
+    - [x] Implementar Seguir/Deixar de Seguir (Backend + UI no Feed e Perfil)
+    - [x] Listar vídeos curtidos no Perfil
+    - [x] Feed infinito (recicla vídeos quando acabam)
+    - [x] Registrar visualizações para algoritmo de recomendação
 - [ ] **Testes & QA**
     - [ ] Teste de Carga no Backend
     - [ ] Teste de Usabilidade no App
