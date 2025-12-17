@@ -101,12 +101,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       backgroundColor: RhemaColors.primary50,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        leading: widget.userId != null
-            ? IconButton(
-                onPressed: () => context.pop(),
-                icon: const Icon(Icons.arrow_back, color: RhemaColors.primary900),
-              )
-            : null,
+        elevation: 0,
+        leading: IconButton(
+          onPressed: () => context.pop(),
+          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+        ),
         title: Text(
           user.handle,
           style: const TextStyle(
