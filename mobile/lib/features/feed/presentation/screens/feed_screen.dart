@@ -322,28 +322,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             ),
           ),
 
-          // Indicador de posição (DEBUG)
-          Positioned(
-            bottom: 100,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: feedState.whenOrNull(
-                  data: (videos) => Text(
-                    '${_currentIndex + 1} / ${videos.length}',
-                    style: const TextStyle(color: Colors.white, fontSize: 16),
-                  ),
-                ),
-              ),
-            ),
-          ),
-
           // Bottom Sheet de Comentários
           if (_showComments) _buildCommentsDrawer(),
 
