@@ -47,13 +47,33 @@ class ProfileRepository {
     try {
       final response = await _dio.get('${ApiConstants.users}/$userId/videos');
       
+      print('📹 User videos response: ${response.data}');
+      
       if (response.data['success'] == true) {
         final List<dynamic> list = response.data['videos'] ?? [];
-        return list.map((e) => VideoModel.fromJson(e)).toList();
+        
+        // O endpoint /users/:id/videos retorna formato simplificado
+        // Precisamos adaptar para o VideoModel
+        return list.map((v) {
+          return VideoModel(
+            id: v['id'] as String,
+            type: v['type'] as String? ?? 'SHORT',
+            videoUrl: v['videoUrl'] as String? ?? '',
+            thumbnailUrl: v['thumbnailUrl'] as String?,
+            title: v['title'] as String?,
+            views: v['views']?.toString() ?? v['viewsCount']?.toString() ?? '0',
+            user: UserShortModel(
+              id: userId,
+              name: '',
+              handle: '',
+            ),
+          );
+        }).toList();
       }
       return [];
     } on DioException catch (e) {
-      print('❌ User Videos API Error: ${e.message}');
+      print('❌ User Videos API Error: ${e.response?.statusCode} - ${e.message}');
+      print('❌ Response data: ${e.response?.data}');
       return [];
     }
   }

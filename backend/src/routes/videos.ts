@@ -23,20 +23,27 @@ export const videosRoutes = new Elysia({ prefix: '/videos' })
      * Upload de vídeo direto (Proxy)
      * Recebe o arquivo e envia para o Bunny.net
      */
-    .post('/upload', async ({ body, set }) => {
-        // MVP: Usar primeiro usuário disponível
-        const defaultUser = await prisma.user.findFirst();
-        const userId = defaultUser?.id;
-
-        if (!userId) {
+    .post('/upload', async ({ jwt, headers, body, set }) => {
+        // Autenticação obrigatória
+        const authHeader = headers.authorization;
+        if (!authHeader?.startsWith('Bearer ')) {
             set.status = 401;
-            return { success: false, error: 'Nenhum usuário configurado' };
+            return { success: false, error: 'Token não fornecido' };
         }
 
+        const token = authHeader.slice(7);
+        const payload = await jwt.verify(token);
+        
+        if (!payload || typeof payload.userId !== 'string') {
+            set.status = 401;
+            return { success: false, error: 'Token inválido' };
+        }
+
+        const userId = payload.userId;
         const { title, description, tags, type, file } = body;
 
         try {
-            console.log('📦 Iniciando upload...', { title, size: file.size, type: file.type });
+            console.log('📦 Iniciando upload para usuário:', userId, { title, size: file.size, type: file.type });
 
             // 1. Criar vídeo na Bunny.net
             const bunnyVideo = await bunnyService.createVideo(title || 'Sem título');
@@ -64,6 +71,8 @@ export const videosRoutes = new Elysia({ prefix: '/videos' })
                     thumbnailUrl: `https://${process.env.BUNNY_CDN_URL}/${bunnyVideo.guid}/thumbnail.jpg`,
                 },
             });
+
+            console.log('✅ Vídeo salvo no banco:', video.id, 'para usuário:', userId);
 
             return {
                 success: true,

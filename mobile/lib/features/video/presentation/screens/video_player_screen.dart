@@ -495,8 +495,12 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
                     children: [
                       CircleAvatar(
                         radius: 24,
-                        backgroundImage: _user!.avatar != null ? CachedNetworkImageProvider(_user!.avatar!) : null,
-                        child: _user!.avatar == null ? Text(_user!.name[0]) : null,
+                        backgroundImage: _user!.avatar != null && _user!.avatar!.isNotEmpty 
+                            ? CachedNetworkImageProvider(_user!.avatar!) 
+                            : null,
+                        child: _user!.avatar == null || _user!.avatar!.isEmpty 
+                            ? Text(_user!.name.isNotEmpty ? _user!.name[0] : '?') 
+                            : null,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -506,7 +510,7 @@ class _VideoPlayerScreenState extends ConsumerState<VideoPlayerScreen> {
                             Row(
                               children: [
                                 Text(
-                                  _user!.name,
+                                  _user!.name.isNotEmpty ? _user!.name : 'Usuário',
                                   style: const TextStyle(
                                     color: RhemaColors.primary900, // Light theme
                                     fontWeight: FontWeight.w600,
