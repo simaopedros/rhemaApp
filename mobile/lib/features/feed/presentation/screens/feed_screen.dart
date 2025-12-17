@@ -254,7 +254,17 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                     ),
                   ),
                   
-                  const SizedBox(width: 8),
+                  // Tabs Centrais
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildFeedTab('Seguindo', FeedType.seguindo),
+                        const SizedBox(width: 24),
+                        _buildFeedTab('Para você', FeedType.sugeridos),
+                      ],
+                    ),
+                  ),
                   
                   // Botão Criar/Gravar Vídeo
                   GestureDetector(
@@ -274,30 +284,15 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                           ),
                         ],
                       ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.add,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ],
+                      child: const Icon(
+                        Icons.add,
+                        color: Colors.white,
+                        size: 20,
                       ),
                     ),
                   ),
                   
-                  // Tabs Centrais
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _buildFeedTab('Seguindo', FeedType.seguindo),
-                        const SizedBox(width: 24),
-                        _buildFeedTab('Para você', FeedType.sugeridos),
-                      ],
-                    ),
-                  ),
+                  const SizedBox(width: 8),
                   
                   // Botão Perfil
                   GestureDetector(
