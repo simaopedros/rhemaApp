@@ -58,12 +58,13 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
     // TELA DE SELEÇÃO (ESTADO VAZIO)
     if (state.selectedFile == null) {
       return Scaffold(
-        backgroundColor: theme.colorScheme.background,
+        backgroundColor: RhemaColors.primary50,
         appBar: AppBar(
-          title: const Text('Criar Publicação'),
+          title: const Text('Criar Publicação', style: TextStyle(color: Colors.black87)),
           centerTitle: true,
           elevation: 0,
           backgroundColor: Colors.transparent,
+          iconTheme: const IconThemeData(color: Colors.black87),
         ),
         body: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -123,12 +124,15 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
 
     // TELA DE FORMULÁRIO (VÍDEO SELECIONADO)
     return Scaffold(
-      backgroundColor: theme.colorScheme.background,
+      backgroundColor: RhemaColors.primary50,
       appBar: AppBar(
-        title: const Text('Detalhes do Vídeo'),
+        title: const Text('Detalhes', style: TextStyle(color: Colors.black87)),
         centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
         leading: IconButton(
-          icon: const Icon(Icons.close),
+          icon: const Icon(Icons.close, color: Colors.black87),
           onPressed: () => controller.clearSelection(),
         ),
         actions: [
@@ -142,7 +146,7 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
                   );
                 }
               },
-              child: const Text('PUBLICAR', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: const Text('PUBLICAR', style: TextStyle(fontWeight: FontWeight.bold, color: RhemaColors.gold)),
             ),
         ],
       ),
@@ -238,11 +242,13 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
               // Fields
               TextFormField(
                 controller: _titleController,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black87),
                 decoration: InputDecoration(
                   labelText: 'Título',
+                  labelStyle: const TextStyle(color: Colors.black54),
                   hintText: 'Ex: Meu vídeo incrível',
-                  prefixIcon: const Icon(Icons.title_rounded),
+                  hintStyle: TextStyle(color: Colors.grey[400]),
+                  prefixIcon: const Icon(Icons.title_rounded, color: RhemaColors.gold),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: Colors.grey[300]!),
@@ -251,8 +257,12 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: Colors.grey[300]!),
                   ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: RhemaColors.gold, width: 2),
+                  ),
                   filled: true,
-                  fillColor: Colors.grey[50],
+                  fillColor: Colors.white,
                 ),
                 validator: (value) => value == null || value.isEmpty ? 'Por favor, dê um título.' : null,
                 enabled: !state.isUploading,
@@ -263,13 +273,16 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
               TextFormField(
                 controller: _descController,
                 maxLines: 5,
+                style: const TextStyle(color: Colors.black87),
                 decoration: InputDecoration(
                   labelText: 'Descrição',
+                  labelStyle: const TextStyle(color: Colors.black54),
                   hintText: 'Conte mais sobre esse vídeo, use #hashtags...',
+                  hintStyle: TextStyle(color: Colors.grey[400]),
                   alignLabelWithHint: true,
                   prefixIcon: const Padding(
-                    padding: EdgeInsets.only(bottom: 80), // Align icon to top
-                    child: Icon(Icons.description_rounded),
+                    padding: EdgeInsets.only(bottom: 80),
+                    child: Icon(Icons.description_rounded, color: RhemaColors.gold),
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -279,8 +292,12 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: Colors.grey[300]!),
                   ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: RhemaColors.gold, width: 2),
+                  ),
                   filled: true,
-                  fillColor: Colors.grey[50],
+                  fillColor: Colors.white,
                 ),
                 enabled: !state.isUploading,
               ).animate().fadeIn(delay: 300.ms).moveX(begin: -20, end: 0),

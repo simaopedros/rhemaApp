@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:rhema_app/core/constants/constants.dart';
 import 'package:rhema_app/core/network/api_client.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -23,6 +25,14 @@ class UploadRepository {
     required Function(double) onProgress,
   }) async {
     try {
+      // Obter token de autenticação
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: StorageKeys.authToken);
+      
+      if (token == null) {
+        throw Exception('Você precisa estar logado para enviar vídeos');
+      }
+
       final Map<String, dynamic> dataMap = {
         'file': await MultipartFile.fromFile(file.path, filename: file.name),
         'type': 'SHORT',
@@ -32,27 +42,22 @@ class UploadRepository {
       if (description != null && description.isNotEmpty) dataMap['description'] = description;
       
       final formData = FormData.fromMap(dataMap);
-      
-      // Enviar tags como simples string se necessário, ou adaptar backend
-      // Simplificado para MVP
 
-      // Criar instância isolada do Dio para evitar interceptores globais que forçam JSON
+      // Criar instância isolada do Dio com token de autenticação
       final uploadDio = Dio(BaseOptions(
         baseUrl: _dio.options.baseUrl,
-        connectTimeout: const Duration(minutes: 5), // Timeout longo para conexão
-        sendTimeout: const Duration(minutes: 5),    // Timeout longo para envio
+        connectTimeout: const Duration(minutes: 5),
+        sendTimeout: const Duration(minutes: 5),
         receiveTimeout: const Duration(minutes: 5),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
       ));
 
-      // Copiar token de autorização se existir nos headers do Dio original
-      // (Assumindo que o interceptor de auth já rodou ou que pegamos do storage, 
-      // mas como é instância nova, melhor não depender do estado do _dio antigo.
-      // Para MVP e upload público, isso é suficiente. Se precisar de auth, injetamos headers).
-      
       // Adicionar logger para debug
       uploadDio.interceptors.add(LogInterceptor(requestBody: false, responseBody: true));
 
-      await uploadDio.post(
+      final response = await uploadDio.post(
         '/videos/upload',
         data: formData,
         onSendProgress: (count, total) {
@@ -61,8 +66,15 @@ class UploadRepository {
         },
       );
       
-    } catch (e) {
-      rethrow;
+      print('✅ Upload concluído: ${response.data}');
+      
+    } on DioException catch (e) {
+      print('❌ Upload error: ${e.response?.statusCode} - ${e.response?.data}');
+      if (e.response?.statusCode == 401) {
+        throw Exception('Sessão expirada. Faça login novamente.');
+      }
+      throw Exception(e.response?.data?['error'] ?? 'Erro no upload: ${e.message}');
     }
   }
 }
+
