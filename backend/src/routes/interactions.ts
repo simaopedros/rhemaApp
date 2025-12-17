@@ -27,52 +27,64 @@ const INTEREST_WEIGHTS = {
 /**
  * Atualiza o vetor de interesse do usuário baseado em uma interação.
  * 
- * Peso POSITIVO: Atração (mover perfil em direção ao vídeo)
- *   Fórmula: NovoPerfil = (1-peso)*PerfilAntigo + peso*VetorVideo
+ * Usa AVG() do pgvector para fazer média entre vetores, já que
+ * multiplicação escalar (vector * float) não é suportada no pgvector 0.8.0
  * 
- * Peso NEGATIVO: Repulsão (afastar perfil do vídeo)
- *   Fórmula: NovoPerfil = (1+|peso|)*PerfilAntigo - |peso|*VetorVideo
- *   Isso "empurra" o vetor na direção oposta.
+ * Peso POSITIVO: Atração - faz média ponderada entre perfil e vídeo
+ * Peso NEGATIVO: Repulsão - não atualiza (comportamento simplificado)
  */
 async function updateUserInterest(userId: string, videoId: string, weight: number) {
     try {
+        // Ignorar repulsão por enquanto (simplificação)
+        if (weight < 0) {
+            console.log(`⛔ Repulsão ignorada (não suportada nesta versão)`);
+            return;
+        }
+
         // Buscar vetor do vídeo
         const [video] = await prisma.$queryRawUnsafe<any[]>(
             `SELECT embedding::text as vector FROM videos WHERE id = '${videoId}'`
         );
 
-        if (video?.vector) {
-            let sql: string;
-
-            if (weight >= 0) {
-                // ATRAÇÃO: Mover em direção ao vídeo
-                const oldWeight = 1 - weight;
-                sql = `UPDATE users 
-                       SET interest_vector = 
-                          CASE 
-                              WHEN interest_vector IS NULL THEN '${video.vector}'::vector
-                              ELSE (interest_vector * ${oldWeight} + '${video.vector}'::vector * ${weight})
-                          END
-                       WHERE id = '${userId}'`;
-                console.log(`✅ Interesse atualizado: ATRAÇÃO ${weight * 100}%`);
-            } else {
-                // REPULSÃO: Afastar do vídeo (só se já tiver vetor)
-                const absWeight = Math.abs(weight);
-                const oldWeight = 1 + absWeight; // > 1 para compensar subtração
-                sql = `UPDATE users 
-                       SET interest_vector = 
-                          CASE 
-                              WHEN interest_vector IS NULL THEN NULL -- Não inicializa com repulsão
-                              ELSE (interest_vector * ${oldWeight} - '${video.vector}'::vector * ${absWeight})
-                          END
-                       WHERE id = '${userId}'`;
-                console.log(`⛔ Interesse atualizado: REPULSÃO ${absWeight * 100}%`);
-            }
-
-            await prisma.$executeRawUnsafe(sql);
+        if (!video?.vector) {
+            console.log(`⚠️ Vídeo ${videoId} não tem embedding`);
+            return;
         }
+
+        // Verificar se usuário já tem vetor
+        const [user] = await prisma.$queryRawUnsafe<any[]>(
+            `SELECT interest_vector::text as vector FROM users WHERE id = '${userId}'`
+        );
+
+        let sql: string;
+
+        if (!user?.vector) {
+            // Usuário não tem vetor - inicializar com o vetor do vídeo
+            sql = `UPDATE users 
+                   SET interest_vector = '${video.vector}'::vector
+                   WHERE id = '${userId}'`;
+            console.log(`🆕 Vetor de interesse inicializado com primeiro vídeo!`);
+        } else {
+            // Usuário já tem vetor - fazer média ponderada usando AVG()
+            // Para simular peso, repetimos o vetor mais vezes
+            // Peso 10% = média de 9 partes do antigo + 1 parte do novo
+            const repetitionsOld = Math.round((1 - weight) * 10);
+            const repetitionsNew = Math.round(weight * 10);
+
+            // Construir subquery com repetições
+            const oldVectors = Array(repetitionsOld).fill(`SELECT '${user.vector}'::vector as v`);
+            const newVectors = Array(repetitionsNew).fill(`SELECT '${video.vector}'::vector as v`);
+            const allVectors = [...oldVectors, ...newVectors].join(' UNION ALL ');
+
+            sql = `UPDATE users 
+                   SET interest_vector = (SELECT AVG(v) FROM (${allVectors}) sub)
+                   WHERE id = '${userId}'`;
+            console.log(`✅ Interesse atualizado: ${repetitionsNew}/${repetitionsOld + repetitionsNew} em direção ao vídeo`);
+        }
+
+        await prisma.$executeRawUnsafe(sql);
     } catch (e) {
-        console.error('Erro ao atualizar interesse:', e);
+        console.error('❌ Erro ao atualizar interesse:', e);
     }
 }
 

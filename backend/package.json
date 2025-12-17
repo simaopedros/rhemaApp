@@ -9,7 +9,10 @@
     "db:generate": "bunx prisma generate",
     "db:migrate": "bunx prisma migrate dev",
     "db:push": "bunx prisma db push",
-    "db:studio": "bunx prisma studio"
+    "db:studio": "bunx prisma studio",
+    "ai:check": "bun run scripts/check-embeddings.ts",
+    "ai:fix-embeddings": "bun run scripts/generate-missing-embeddings.ts",
+    "ai:init-users": "bun run scripts/init-user-vectors.ts"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.0.0",

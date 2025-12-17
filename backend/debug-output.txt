@@ -1,0 +1,40 @@
+============================================================
+🔍 DEBUGANDO INTERAÇÕES E VETORES
+============================================================
+
+📊 Total de interações no banco: 12
+
+📋 Últimas 5 interações:
+   1. [LIKE] Simão Pedro -> "Acampamento de Jovens"
+      Data: 17/12/2025, 11:20:28
+   2. [LIKE] Simão Pedro -> "Meu vídeo incrível "
+      Data: 17/12/2025, 11:19:30
+   3. [LIKE] Simão Pedro -> "Angelus no Vaticano"
+      Data: 17/12/2025, 11:16:27
+   4. [VIEW] Simão Pedro -> "teste"
+      Data: 16/12/2025, 23:31:01
+   5. [VIEW] Simão Pedro -> "Não desista agora!"
+      Data: 16/12/2025, 22:44:24
+
+------------------------------------------------------------
+👤 ESTADO DOS VETORES DE USUÁRIOS:
+   ✅ Aline Barros: SIM
+   ✅ Comunidade Shalom: SIM
+   ✅ Deive Leonardo: SIM
+   ✅ Padre Marcelo: SIM
+   ✅ Papa Francisco: SIM
+   ✅ Simão Pedro: SIM
+   ✅ Simão Pedro: SIM
+
+------------------------------------------------------------
+🎥 ESTADO DOS EMBEDDINGS DE VÍDEOS:
+   PROCESSING: 0/2 com embedding
+   READY: 9/9 com embedding
+
+------------------------------------------------------------
+🧪 TESTANDO OPERAÇÃO DE VETOR (pgvector):
+   ✅ pgvector operacional!
+   - Usuários com vetor: 7
+   - Vídeos com embedding: 9
+
+============================================================
