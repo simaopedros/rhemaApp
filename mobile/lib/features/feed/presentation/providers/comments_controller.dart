@@ -46,25 +46,33 @@ class CommentsController extends StateNotifier<CommentsState> {
   }
 
   Future<void> postComment(String text) async {
-    if (_currentVideoId == null) return;
-    if (text.trim().isEmpty) return;
+    if (_currentVideoId == null) {
+      print('❌ CommentsController: videoId é null!');
+      throw Exception('ID do vídeo não definido');
+    }
+    if (text.trim().isEmpty) {
+      print('❌ CommentsController: texto vazio!');
+      return;
+    }
 
-    // TODO: Implementar estado de "enviando"
+    print('📝 CommentsController: Enviando para videoId: $_currentVideoId');
+    
     try {
       final newComment = await _repository.postComment(
         videoId: _currentVideoId!,
         text: text,
       );
       
+      print('✅ CommentsController: Comentário criado: $newComment');
+      
       // Adicionar comentário no topo da lista
-      // Note: Em produção seria melhor refazer o fetch ou adicionar otimisticamente
-      // Aqui estamos confiando no retorno da API (mock)
       state = state.copyWith(
         comments: [newComment, ...state.comments],
       );
     } catch (e) {
-      // TODO: Handle error
-      print(e);
+      print('❌ CommentsController: Erro ao postar: $e');
+      state = state.copyWith(error: e.toString());
+      rethrow; // Propagar o erro para a UI
     }
   }
 }

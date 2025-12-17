@@ -45,6 +45,37 @@ class _CommentsDrawerState extends ConsumerState<CommentsDrawer> {
     }
   }
 
+  String _formatTimeAgo(String? dateString) {
+    if (dateString == null) return 'agora';
+    
+    try {
+      final date = DateTime.parse(dateString);
+      final now = DateTime.now();
+      final difference = now.difference(date);
+      
+      if (difference.inSeconds < 60) {
+        return 'agora';
+      } else if (difference.inMinutes < 60) {
+        return 'há ${difference.inMinutes} min';
+      } else if (difference.inHours < 24) {
+        return 'há ${difference.inHours}h';
+      } else if (difference.inDays < 7) {
+        return 'há ${difference.inDays}d';
+      } else if (difference.inDays < 30) {
+        final weeks = (difference.inDays / 7).floor();
+        return 'há ${weeks}sem';
+      } else if (difference.inDays < 365) {
+        final months = (difference.inDays / 30).floor();
+        return 'há ${months}mês${months > 1 ? 'es' : ''}';
+      } else {
+        final years = (difference.inDays / 365).floor();
+        return 'há ${years}ano${years > 1 ? 's' : ''}';
+      }
+    } catch (e) {
+      return 'agora';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(commentsControllerProvider);
@@ -88,10 +119,13 @@ class _CommentsDrawerState extends ConsumerState<CommentsDrawer> {
                       itemCount: state.comments.length,
                       itemBuilder: (context, index) {
                         final comment = state.comments[index];
-                        // Safe access
-                        final userName = comment['user_name'] ?? 'Usuário';
-                        final userAvatar = comment['user_avatar'];
+                        // Safe access - user é objeto aninhado da API
+                        final user = comment['user'] as Map<String, dynamic>?;
+                        final userName = user?['name'] ?? 'Usuário';
+                        final userAvatar = user?['avatar'] as String?;
                         final text = comment['text'] ?? '';
+                        final createdAt = comment['createdAt'] as String?;
+                        final timeAgo = _formatTimeAgo(createdAt);
                         
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 16),
@@ -121,7 +155,7 @@ class _CommentsDrawerState extends ConsumerState<CommentsDrawer> {
                                         ),
                                         const SizedBox(width: 8),
                                         Text(
-                                          'há pouco', 
+                                          timeAgo, 
                                           style: TextStyle(
                                             color: Colors.grey[500],
                                             fontSize: 12,

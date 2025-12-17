@@ -28,10 +28,12 @@ class FeedScreen extends ConsumerStatefulWidget {
 class _FeedScreenState extends ConsumerState<FeedScreen> {
   final PageController _pageController = PageController();
   final VideoPreloadService _preloadService = VideoPreloadService();
+  final TextEditingController _commentController = TextEditingController();
   int _currentIndex = 0;
   bool _showComments = false;
   bool _showActions = false;
   FeedType _currentFeedType = FeedType.sugeridos;
+  VideoModel? _currentCommentingVideo; // Vídeo atual sendo comentado
 
   @override
   void initState() {
@@ -43,6 +45,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   void dispose() {
     _pageController.dispose();
     _preloadService.disposeAll();
+    _commentController.dispose();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
         overlays: SystemUiOverlay.values);
     super.dispose();
@@ -175,6 +178,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                     isActive: index == _currentIndex,
                     onLike: () => _runWithAuth(() => _toggleLike(video)),
                     onComment: () => _runWithAuth(() {
+                      _currentCommentingVideo = video;
                       ref.read(commentsControllerProvider.notifier).loadComments(video.id);
                       setState(() => _showComments = true);
                     }),
@@ -186,6 +190,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                       );
                     },
                     onSwipeUp: () {
+                      _currentCommentingVideo = video;
                       ref.read(commentsControllerProvider.notifier).loadComments(video.id);
                       setState(() => _showComments = true);
                     },
@@ -348,22 +353,59 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
   Widget _buildCommentsDrawer() {
     final commentsState = ref.watch(commentsControllerProvider);
-    final feedState = ref.watch(feedControllerProvider);
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final screenHeight = MediaQuery.of(context).size.height;
+    
+    // Altura do drawer: diminui quando teclado aparece
+    final drawerHeight = keyboardHeight > 0
+        ? screenHeight - keyboardHeight - MediaQuery.of(context).padding.top - 50
+        : screenHeight * 0.65;
+
+    void postComment() async {
+      final text = _commentController.text.trim();
+      if (text.isNotEmpty) {
+        print('📝 Enviando comentário: $text');
+        try {
+          await ref.read(commentsControllerProvider.notifier).postComment(text);
+          print('✅ Comentário enviado com sucesso');
+          _commentController.clear();
+          FocusScope.of(context).unfocus();
+          
+          // Atualizar a contagem de comentários no VideoModel
+          if (_currentCommentingVideo != null) {
+            setState(() {
+              _currentCommentingVideo!.comments += 1;
+            });
+          }
+        } catch (e) {
+          print('❌ Erro ao enviar comentário: $e');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Erro ao enviar comentário: $e'), backgroundColor: Colors.red),
+            );
+          }
+        }
+      }
+    }
 
     return Positioned.fill(
       child: GestureDetector(
-        onTap: () => setState(() => _showComments = false),
+        onTap: () {
+          FocusScope.of(context).unfocus();
+          setState(() => _showComments = false);
+        },
         child: Container(
           color: Colors.black54,
           child: Align(
             alignment: Alignment.bottomCenter,
             child: GestureDetector(
               onTap: () {}, // Prevent closing when tapping inside
-              child: Container(
-                height: MediaQuery.of(context).size.height * 0.6,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                height: drawerHeight,
+                decoration: BoxDecoration(
+                  color: Colors.grey[900],
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                 ),
                 child: Column(
                   children: [
@@ -373,42 +415,155 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.grey[300],
+                        color: Colors.grey[600],
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                    // Title
+                    // Title with close button
                     Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Text(
-                        'Comentários (${commentsState.comments.length})',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Comentários (${commentsState.comments.length})',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color: Colors.white,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, color: Colors.white70),
+                            onPressed: () {
+                              FocusScope.of(context).unfocus();
+                              setState(() => _showComments = false);
+                            },
+                          ),
+                        ],
                       ),
                     ),
+                    const Divider(height: 1, color: Colors.grey),
                     // Comments List
                     Expanded(
                       child: commentsState.isLoading
-                          ? const Center(child: CircularProgressIndicator())
+                          ? const Center(child: CircularProgressIndicator(color: RhemaColors.gold))
                           : commentsState.comments.isEmpty
-                              ? const Center(child: Text('Nenhum comentário ainda'))
+                              ? Center(
+                                  child: Text(
+                                    'Nenhum comentário ainda.\nSeja o primeiro a comentar!',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(color: Colors.grey[500]),
+                                  ),
+                                )
                               : ListView.builder(
+                                  padding: const EdgeInsets.all(16),
                                   itemCount: commentsState.comments.length,
                                   itemBuilder: (context, index) {
                                     final comment = commentsState.comments[index];
-                                    return ListTile(
-                                      leading: CircleAvatar(
-                                        child: Text(
-                                          (comment['user']?['name'] ?? 'A')[0],
-                                        ),
+                                    final user = comment['user'] as Map<String, dynamic>?;
+                                    final userName = user?['name'] ?? 'Usuário';
+                                    final userAvatar = user?['avatar'] as String?;
+                                    final text = comment['text'] ?? '';
+
+                                    return Padding(
+                                      padding: const EdgeInsets.only(bottom: 16),
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 18,
+                                            backgroundColor: Colors.grey[700],
+                                            backgroundImage: userAvatar != null
+                                                ? NetworkImage(userAvatar)
+                                                : null,
+                                            child: userAvatar == null
+                                                ? Text(
+                                                    userName[0].toUpperCase(),
+                                                    style: const TextStyle(color: Colors.white),
+                                                  )
+                                                : null,
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  userName,
+                                                  style: TextStyle(
+                                                    color: Colors.grey[300],
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 13,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  text,
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const Icon(Icons.favorite_border, size: 16, color: Colors.grey),
+                                        ],
                                       ),
-                                      title: Text(comment['user']?['name'] ?? 'Anônimo'),
-                                      subtitle: Text(comment['text'] ?? ''),
                                     );
                                   },
                                 ),
+                    ),
+                    // Input de Comentário
+                    Container(
+                      padding: const EdgeInsets.only(
+                        left: 16,
+                        right: 16,
+                        top: 12,
+                        bottom: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[850],
+                        border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.3))),
+                      ),
+                      child: SafeArea(
+                        top: false,
+                        child: Row(
+                          children: [
+                            const CircleAvatar(
+                              radius: 16,
+                              backgroundColor: Colors.grey,
+                              child: Icon(Icons.person, size: 20, color: Colors.white),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: TextField(
+                                controller: _commentController,
+                                style: const TextStyle(color: Colors.white),
+                                decoration: InputDecoration(
+                                  hintText: 'Adicione um comentário...',
+                                  hintStyle: TextStyle(color: Colors.grey[500]),
+                                  isDense: true,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.grey[800],
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                ),
+                                onSubmitted: (_) => postComment(),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: const Icon(Icons.send, color: RhemaColors.gold),
+                              onPressed: postComment,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -421,8 +576,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   Widget _buildActionsDrawer() {
-    final feedState = ref.watch(feedControllerProvider);
-
     return Positioned.fill(
       child: GestureDetector(
         onTap: () => setState(() => _showActions = false),

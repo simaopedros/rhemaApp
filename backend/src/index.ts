@@ -10,6 +10,7 @@ import { feedRoutes } from './routes/feed';
 import { userRoutes } from './routes/users';
 import { interactionRoutes } from './routes/interactions';
 import { searchRoutes } from './routes/search';
+import { webhooksRoutes } from './routes/webhooks';
 import { processingWorker } from './services/processing-worker';
 
 const app = new Elysia({
@@ -45,6 +46,7 @@ const app = new Elysia({
     .use(userRoutes)
     .use(interactionRoutes)
     .use(searchRoutes)
+    .use(webhooksRoutes)
     // Error handling
     .onError(({ code, error }) => {
         const errMsg = (error as any)?.message || 'Unknown error';

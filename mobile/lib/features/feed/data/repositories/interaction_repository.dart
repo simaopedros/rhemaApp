@@ -53,16 +53,26 @@ class InteractionRepository extends ApiService {
     String? parentId,
   }) async {
     try {
+      // Construir data sem parentId se for null (API rejeita null)
+      final Map<String, dynamic> data = {
+        'videoId': videoId,
+        'text': text,
+      };
+      if (parentId != null) {
+        data['parentId'] = parentId;
+      }
+      
+      print('📤 Enviando comentário: $data');
+      
       final response = await dio.post(
         ApiConstants.interactionComment,
-        data: {
-          'videoId': videoId,
-          'text': text,
-          'parentId': parentId,
-        },
+        data: data,
       );
+      
+      print('📥 Resposta: ${response.data}');
       return response.data['comment'];
     } on DioException catch (e) {
+      print('❌ Erro ao postar comentário: ${e.response?.statusCode} - ${e.response?.data}');
       throw handleError(e);
     }
   }

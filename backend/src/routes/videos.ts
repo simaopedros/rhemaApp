@@ -33,7 +33,7 @@ export const videosRoutes = new Elysia({ prefix: '/videos' })
 
         const token = authHeader.slice(7);
         const payload = await jwt.verify(token);
-        
+
         if (!payload || typeof payload.userId !== 'string') {
             set.status = 401;
             return { success: false, error: 'Token inválido' };
@@ -62,7 +62,7 @@ export const videosRoutes = new Elysia({ prefix: '/videos' })
                 data: {
                     userId,
                     type: type === 'LONG' ? 'LONG' : 'SHORT',
-                    status: 'READY', // Assume pronto após upload direto (ou PROCESSING se o Bunny demorar)
+                    status: 'PROCESSING', // O Bunny vai processar e enviar webhook quando pronto
                     bunnyVideoId: bunnyVideo.guid,
                     title: title || null,
                     description: description || null,

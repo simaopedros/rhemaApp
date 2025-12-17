@@ -237,7 +237,7 @@ Este arquivo contém todas as etapas detalhadas para o desenvolvimento do projet
 ## FASE 3: Infraestrutura de Vídeo & Processamento (Cortes)
 - [x] **Integração Bunny.net**
     - [x] Configurar credenciais (Library ID: 563955, CDN: vz-2322c3c2-fde.b-cdn.net)
-    - [ ] Configurar Webhooks (Vídeo processado, Falha)
+    - [x] Configurar Webhooks (Vídeo processado, Falha)
     - [x] Serviço de Upload via API (TUS Protocol)
 - [x] **Worker de Processamento (FFmpeg & AI)**
     - [x] Configurar sistema de fila (DB-based, BullMQ para produção)
