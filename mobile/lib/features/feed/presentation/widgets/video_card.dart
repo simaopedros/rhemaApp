@@ -181,8 +181,7 @@ class _VideoCardState extends State<VideoCard> with TickerProviderStateMixin {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     
     return GestureDetector(
-      behavior: HitTestBehavior.translucent, // Permite que PageView receba gestos
-      onVerticalDragEnd: _handleVerticalDragEnd,
+      behavior: HitTestBehavior.deferToChild,
       onDoubleTap: _handleDoubleTap,
       onTap: widget.onTap,
       child: Stack(

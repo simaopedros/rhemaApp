@@ -108,28 +108,13 @@ export const feedRoutes = new Elysia({ prefix: '/feed' })
 
         } else {
             // Fallback: Feed cronológico ou Trending
-            // IDs dos vídeos já vistos pelo usuário
-            const viewedVideoIds: string[] = [];
-            if (userId) {
-                const viewedInteractions = await prisma.interaction.findMany({
-                    where: {
-                        userId,
-                        type: 'VIEW',
-                    },
-                    select: { videoId: true },
-                    take: 100, // Limitar para performance
-                });
-                viewedVideoIds.push(...viewedInteractions.map(i => i.videoId));
-            }
+            const isFollowing = type === 'seguindo';
 
             // Query base para vídeos
-            const whereClause = {
+            const baseWhereClause = {
                 status: VideoStatus.READY,
                 type: VideoType.SHORT,
-                ...(viewedVideoIds.length > 0 && {
-                    id: { notIn: viewedVideoIds }
-                }),
-                ...(type === 'seguindo' && userId && {
+                ...(isFollowing && userId && {
                     user: {
                         followers: {
                             some: { followerId: userId }
@@ -138,35 +123,37 @@ export const feedRoutes = new Elysia({ prefix: '/feed' })
                 })
             };
 
-            // Buscar vídeos
-            const isFollowing = type === 'seguindo';
-
-            videos = await prisma.video.findMany({
-                where: whereClause,
-                include: {
-                    user: {
-                        select: {
-                            id: true,
-                            name: true,
-                            handle: true,
-                            avatar: true,
-                            isVerified: true,
-                        }
-                    },
-                    parentVideo: {
-                        select: {
-                            id: true,
-                            videoUrl: true,
-                            thumbnailUrl: true,
-                            title: true,
-                            description: true,
-                            duration: true,
-                        }
+            const includeClause = {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        handle: true,
+                        avatar: true,
+                        isVerified: true,
                     }
                 },
-                orderBy: isFollowing
-                    ? { createdAt: 'desc' } // Seguindo: Cronológico
-                    : [{ score: 'desc' }, { createdAt: 'desc' }], // Sugeridos: Relevância
+                parentVideo: {
+                    select: {
+                        id: true,
+                        videoUrl: true,
+                        thumbnailUrl: true,
+                        title: true,
+                        description: true,
+                        duration: true,
+                    }
+                }
+            };
+
+            const orderByClause = isFollowing
+                ? { createdAt: 'desc' as const }
+                : [{ score: 'desc' as const }, { createdAt: 'desc' as const }];
+
+            // Buscar todos os vídeos disponíveis (feed infinito - sem excluir vistos)
+            videos = await prisma.video.findMany({
+                where: baseWhereClause,
+                include: includeClause,
+                orderBy: orderByClause,
                 skip,
                 take: parseInt(limit),
             });

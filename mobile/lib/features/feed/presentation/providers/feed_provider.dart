@@ -7,18 +7,17 @@ final feedControllerProvider = AsyncNotifierProvider<FeedController, List<VideoM
 
 class FeedController extends AsyncNotifier<List<VideoModel>> {
   int _page = 1;
-  bool _hasMore = true;
   bool _isLoadingMore = false;
   String _currentType = 'sugeridos';
+  int _cycleCount = 0; // Quantas vezes já reiniciou o feed
 
-  bool get hasMore => _hasMore;
   bool get isLoadingMore => _isLoadingMore;
   String get currentType => _currentType;
 
   @override
   FutureOr<List<VideoModel>> build() async {
     _page = 1;
-    _hasMore = true;
+    _cycleCount = 0;
     _currentType = 'sugeridos';
     return _fetchFeed(page: 1);
   }
@@ -32,16 +31,11 @@ class FeedController extends AsyncNotifier<List<VideoModel>> {
   Future<List<VideoModel>> _fetchFeed({required int page}) async {
     final repository = ref.read(feedRepositoryProvider);
     final newVideos = await repository.getFeed(page: page, type: _currentType);
-    
-    if (newVideos.isEmpty) {
-      _hasMore = false;
-    }
-    
     return newVideos;
   }
 
   Future<void> loadMore() async {
-    if (!_hasMore || _isLoadingMore || state.isLoading) return;
+    if (_isLoadingMore || state.isLoading) return;
 
     _isLoadingMore = true;
     _page++;
@@ -50,7 +44,17 @@ class FeedController extends AsyncNotifier<List<VideoModel>> {
     
     try {
       final newVideos = await _fetchFeed(page: _page);
-      state = AsyncValue.data([...currentVideos, ...newVideos]);
+      
+      if (newVideos.isEmpty) {
+        // Se não tem mais vídeos novos, reinicia do início (feed infinito)
+        _page = 1;
+        _cycleCount++;
+        final recycledVideos = await _fetchFeed(page: 1);
+        // Adiciona os vídeos reciclados ao final da lista
+        state = AsyncValue.data([...currentVideos, ...recycledVideos]);
+      } else {
+        state = AsyncValue.data([...currentVideos, ...newVideos]);
+      }
     } catch (e, st) {
       _page--;
       state = AsyncValue.data(currentVideos);
@@ -61,8 +65,9 @@ class FeedController extends AsyncNotifier<List<VideoModel>> {
 
   Future<void> refresh() async {
     _page = 1;
-    _hasMore = true;
+    _cycleCount = 0;
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() => _fetchFeed(page: 1));
   }
 }
+
