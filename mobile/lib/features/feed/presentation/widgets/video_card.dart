@@ -17,6 +17,7 @@ class VideoCard extends StatefulWidget {
   final VoidCallback onSwipeUp;
   final VoidCallback onSwipeDown;
   final VoidCallback? onSave;
+  final VoidCallback? onFollow;
 
   const VideoCard({
     super.key,
@@ -30,6 +31,7 @@ class VideoCard extends StatefulWidget {
     required this.onSwipeUp,
     required this.onSwipeDown,
     this.onSave,
+    this.onFollow,
   });
 
   @override
@@ -385,6 +387,9 @@ class _VideoCardState extends State<VideoCard> with TickerProviderStateMixin {
            bottom: -10,
            child: GestureDetector(
              onTap: () {
+               if (widget.onFollow != null) {
+                 widget.onFollow!();
+               }
                ScaffoldMessenger.of(context).showSnackBar(
                  SnackBar(
                    content: Text('Seguindo @${user.handle}'),

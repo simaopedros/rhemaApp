@@ -9,6 +9,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:rhema_app/core/constants/constants.dart';
 import 'package:rhema_app/features/feed/data/models/video_model.dart';
 import 'package:rhema_app/features/profile/data/models/user_profile_model.dart';
+import 'package:rhema_app/features/feed/data/repositories/interaction_repository.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   final String? userId;
@@ -56,6 +57,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       if (mounted) {
         scaffoldMessenger.showSnackBar(
            SnackBar(content: Text('Erro ao sair: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _toggleFollow(String userId) async {
+    final previousState = _isFollowing;
+    setState(() => _isFollowing = !_isFollowing);
+    
+    try {
+      final repo = ref.read(interactionRepositoryProvider);
+      if (_isFollowing) {
+        await repo.followUser(userId);
+      } else {
+        await repo.unfollowUser(userId);
+      }
+    } catch (e) {
+      // Reverter em caso de erro
+      if (mounted) {
+        setState(() => _isFollowing = previousState);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -265,7 +288,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   _isFollowing ? 'Seguindo' : 'Seguir',
                   _isFollowing ? Icons.check : Icons.add,
                   isPrimary: !_isFollowing,
-                  onTap: () => setState(() => _isFollowing = !_isFollowing),
+                  onTap: () => _toggleFollow(user.id),
                 ),
                 const SizedBox(width: 12),
                 _buildActionButton(

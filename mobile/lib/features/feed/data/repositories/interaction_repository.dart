@@ -93,4 +93,48 @@ class InteractionRepository extends ApiService {
       throw handleError(e);
     }
   }
+
+  /// Seguir um usuário
+  Future<bool> followUser(String userId) async {
+    try {
+      final response = await dio.post('${ApiConstants.users}/$userId/follow');
+      
+      final data = response.data;
+      if (data['success'] == true) {
+        return true;
+      }
+      throw data['error'] ?? 'Erro ao seguir usuário';
+    } on DioException catch (e) {
+      print('❌ Follow error: ${e.response?.data}');
+      throw handleError(e);
+    }
+  }
+
+  /// Deixar de seguir um usuário
+  Future<bool> unfollowUser(String userId) async {
+    try {
+      final response = await dio.delete('${ApiConstants.users}/$userId/follow');
+      
+      final data = response.data;
+      if (data['success'] == true) {
+        return true;
+      }
+      throw data['error'] ?? 'Erro ao deixar de seguir';
+    } on DioException catch (e) {
+      print('❌ Unfollow error: ${e.response?.data}');
+      throw handleError(e);
+    }
+  }
+
+  /// Verificar se está seguindo um usuário
+  Future<bool> isFollowing(String userId) async {
+    try {
+      final response = await dio.get('${ApiConstants.users}/$userId/following');
+      return response.data['isFollowing'] == true;
+    } on DioException catch (e) {
+      print('❌ Check following error: ${e.response?.data}');
+      return false;
+    }
+  }
 }
+

@@ -164,6 +164,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 itemCount: videos.length,
                 onPageChanged: (index) {
                   setState(() => _currentIndex = index);
+                  // Registrar visualização para o algoritmo de recomendação
+                  final video = videos[index];
+                  ref.read(interactionRepositoryProvider).registerView(video.id);
                 },
                 itemBuilder: (context, index) {
                   final video = videos[index];
@@ -189,6 +192,17 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                     onSwipeDown: () {
                       // Show stats or other action
                     },
+                    onFollow: () => _runWithAuth(() async {
+                      try {
+                        await ref.read(interactionRepositoryProvider).followUser(video.user.id);
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red),
+                          );
+                        }
+                      }
+                    }),
                   );
                 },
               );
