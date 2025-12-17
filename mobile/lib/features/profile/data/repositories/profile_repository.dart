@@ -77,5 +77,36 @@ class ProfileRepository {
       return [];
     }
   }
-}
 
+  Future<List<VideoModel>> getLikedVideos() async {
+    try {
+      final response = await _dio.get('${ApiConstants.interactions}/liked');
+      
+      print('❤️ Liked videos response: ${response.data}');
+      
+      if (response.data['success'] == true) {
+        final List<dynamic> list = response.data['videos'] ?? [];
+        
+        return list.map((v) {
+          return VideoModel(
+            id: v['id'] as String,
+            type: v['type'] as String? ?? 'SHORT',
+            videoUrl: v['videoUrl'] as String? ?? '',
+            thumbnailUrl: v['thumbnailUrl'] as String?,
+            title: v['title'] as String?,
+            views: v['views']?.toString() ?? v['viewsCount']?.toString() ?? '0',
+            user: UserShortModel(
+              id: '',
+              name: '',
+              handle: '',
+            ),
+          );
+        }).toList();
+      }
+      return [];
+    } on DioException catch (e) {
+      print('❌ Liked Videos API Error: ${e.response?.statusCode} - ${e.message}');
+      return [];
+    }
+  }
+}

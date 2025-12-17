@@ -492,4 +492,61 @@ export const interactionRoutes = new Elysia({ prefix: '/interactions' })
                 createdAt: c.createdAt,
             }))
         };
+    })
+
+    // Listar vídeos curtidos pelo usuário
+    .get('/liked', async ({ jwt, headers, query, set }) => {
+        const authHeader = headers.authorization;
+        if (!authHeader?.startsWith('Bearer ')) {
+            set.status = 401;
+            return { success: false, error: 'Não autorizado' };
+        }
+
+        const token = authHeader.slice(7);
+        const payload = await jwt.verify(token);
+        if (!payload || typeof payload.userId !== 'string') {
+            set.status = 401;
+            return { success: false, error: 'Token inválido' };
+        }
+
+        const { page = '1', limit = '20' } = query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        const likedInteractions = await prisma.interaction.findMany({
+            where: {
+                userId: payload.userId,
+                type: InteractionType.LIKE,
+            },
+            include: {
+                video: {
+                    select: {
+                        id: true,
+                        title: true,
+                        thumbnailUrl: true,
+                        videoUrl: true,
+                        viewsCount: true,
+                        type: true,
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' },
+            skip,
+            take: parseInt(limit),
+        });
+
+        return {
+            success: true,
+            videos: likedInteractions
+                .filter(i => i.video !== null)
+                .map(i => ({
+                    id: i.video!.id,
+                    title: i.video!.title,
+                    thumbnailUrl: i.video!.thumbnailUrl,
+                    videoUrl: i.video!.videoUrl,
+                    views: i.video!.viewsCount,
+                    type: i.video!.type,
+                    likedAt: i.createdAt,
+                })),
+        };
     });
+

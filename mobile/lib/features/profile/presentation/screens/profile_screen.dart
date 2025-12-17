@@ -164,7 +164,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           controller: _tabController,
           children: [
             _buildVideosGrid(state.videos),
-            _buildLikedVideosGrid(),
+            _buildLikedVideosGrid(state.likedVideos),
           ],
         ),
       ),
@@ -396,19 +396,36 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     );
   }
 
-  Widget _buildLikedVideosGrid() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.lock_outline, size: 48, color: RhemaColors.primary300),
-          SizedBox(height: 16),
-          Text(
-            'Vídeos curtidos são privados',
-            style: TextStyle(color: RhemaColors.primary400),
-          ),
-        ],
+  Widget _buildLikedVideosGrid(List<VideoModel> likedVideos) {
+    if (likedVideos.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.favorite_border, size: 48, color: RhemaColors.primary300),
+            SizedBox(height: 16),
+            Text(
+              'Nenhum vídeo curtido ainda',
+              style: TextStyle(color: RhemaColors.primary400),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return GridView.builder(
+      padding: const EdgeInsets.all(2),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        mainAxisSpacing: 2,
+        crossAxisSpacing: 2,
+        childAspectRatio: 9 / 16,
       ),
+      itemCount: likedVideos.length,
+      itemBuilder: (context, index) {
+        final video = likedVideos[index];
+        return _buildVideoThumbnail(video);
+      },
     );
   }
 
