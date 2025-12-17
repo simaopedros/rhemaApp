@@ -31,6 +31,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   int _currentIndex = 0;
   bool _showComments = false;
   bool _showActions = false;
+  FeedType _currentFeedType = FeedType.sugeridos;
 
   @override
   void initState() {
@@ -93,6 +94,39 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         );
       }
     }
+  }
+
+  Widget _buildFeedTab(String label, FeedType type) {
+    final isSelected = _currentFeedType == type;
+    return GestureDetector(
+      onTap: () {
+        setState(() => _currentFeedType = type);
+        // TODO: Recarregar feed baseado no tipo
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : Colors.white60,
+              fontSize: 16,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+          const SizedBox(height: 4),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            height: 2,
+            width: isSelected ? 24 : 0,
+            decoration: BoxDecoration(
+              color: RhemaColors.gold,
+              borderRadius: BorderRadius.circular(1),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -178,7 +212,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             },
           ),
 
-          // Top Bar Simplificada
+          // Top Bar com Tabs e Navegação
           Positioned(
             top: 0,
             left: 0,
@@ -188,25 +222,65 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 top: MediaQuery.of(context).padding.top + 8,
                 left: 16,
                 right: 16,
-                bottom: 8,
+                bottom: 12,
               ),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withOpacity(0.6),
+                    Colors.black.withOpacity(0.7),
+                    Colors.black.withOpacity(0.3),
                     Colors.transparent,
                   ],
                 ),
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image.asset(
-                    AssetConstants.logoTransparent,
-                    height: 32,
-                    fit: BoxFit.contain,
+                  // Botão Buscar
+                  GestureDetector(
+                    onTap: () => context.push('/search'),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.search,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                  
+                  // Tabs Centrais
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildFeedTab('Seguindo', FeedType.seguindo),
+                        const SizedBox(width: 24),
+                        _buildFeedTab('Para você', FeedType.sugeridos),
+                      ],
+                    ),
+                  ),
+                  
+                  // Botão Perfil
+                  GestureDetector(
+                    onTap: () => context.push('/profile'),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.person_outline,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
                   ),
                 ],
               ),
