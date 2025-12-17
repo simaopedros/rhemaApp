@@ -100,8 +100,15 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     final isSelected = _currentFeedType == type;
     return GestureDetector(
       onTap: () {
-        setState(() => _currentFeedType = type);
-        // TODO: Recarregar feed baseado no tipo
+        if (_currentFeedType == type) return;
+        setState(() {
+          _currentFeedType = type;
+          _currentIndex = 0;
+        });
+        // Chamar o algoritmo correto no backend
+        final feedType = type == FeedType.sugeridos ? 'sugeridos' : 'seguindo';
+        ref.read(feedControllerProvider.notifier).setFeedType(feedType);
+        _pageController.jumpToPage(0);
       },
       child: Column(
         mainAxisSize: MainAxisSize.min,
