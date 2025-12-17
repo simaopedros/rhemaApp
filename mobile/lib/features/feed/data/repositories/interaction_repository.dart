@@ -75,4 +75,22 @@ class InteractionRepository extends ApiService {
       throw handleError(e);
     }
   }
+
+  Future<bool> saveVideo(String videoId) async {
+    try {
+      final response = await dio.post(
+        ApiConstants.interactionSave,
+        data: {'videoId': videoId},
+      );
+      
+      final data = response.data;
+      if (data != null && data['success'] == false) {
+        throw data['error'] ?? 'Erro ao salvar vídeo';
+      }
+      
+      return data['saved'] as bool? ?? true;
+    } on DioException catch (e) {
+      throw handleError(e);
+    }
+  }
 }

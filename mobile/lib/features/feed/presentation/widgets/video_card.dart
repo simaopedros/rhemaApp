@@ -16,6 +16,7 @@ class VideoCard extends StatefulWidget {
   final VoidCallback onTap; // Open Detail
   final VoidCallback onSwipeUp;
   final VoidCallback onSwipeDown;
+  final VoidCallback? onSave;
 
   const VideoCard({
     super.key,
@@ -28,6 +29,7 @@ class VideoCard extends StatefulWidget {
     required this.onTap,
     required this.onSwipeUp,
     required this.onSwipeDown,
+    this.onSave,
   });
 
   @override
@@ -41,6 +43,7 @@ class _VideoCardState extends State<VideoCard> with TickerProviderStateMixin {
   bool _isInitialized = false;
   bool _showDoubleTapHeart = false;
   bool _isMenuOpen = false;
+  bool _isSaved = false;
   
 
 
@@ -324,10 +327,19 @@ class _VideoCardState extends State<VideoCard> with TickerProviderStateMixin {
                        ),
                        const SizedBox(height: 16),
                        _buildSideActionButton(
-                         icon: Icons.bookmark_border_rounded,
-                         label: 'Salvar',
+                         icon: _isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                         color: _isSaved ? RhemaColors.gold : Colors.white,
+                         label: _isSaved ? 'Salvo' : 'Salvar',
                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Salvo para ver depois!')));
+                            setState(() => _isSaved = !_isSaved);
+                            widget.onSave?.call();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(_isSaved ? 'Vídeo salvo!' : 'Vídeo removido dos salvos'),
+                                behavior: SnackBarBehavior.floating,
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
                          },
                        ),
                     ],
@@ -353,28 +365,42 @@ class _VideoCardState extends State<VideoCard> with TickerProviderStateMixin {
        clipBehavior: Clip.none,
        alignment: Alignment.bottomCenter,
        children: [
-         Container(
-           padding: const EdgeInsets.all(1),
-           decoration: BoxDecoration(
-             color: Colors.white,
-             shape: BoxShape.circle,
-           ),
-           child: CircleAvatar(
-             radius: 24,
-             backgroundImage: user.avatar != null ? CachedNetworkImageProvider(user.avatar!) : null,
-             backgroundColor: Colors.grey[800],
-             child: user.avatar == null ? const Icon(Icons.person, color: Colors.white) : null,
+         GestureDetector(
+           onTap: widget.onUserTap,
+           child: Container(
+             padding: const EdgeInsets.all(1),
+             decoration: const BoxDecoration(
+               color: Colors.white,
+               shape: BoxShape.circle,
+             ),
+             child: CircleAvatar(
+               radius: 24,
+               backgroundImage: user.avatar != null ? CachedNetworkImageProvider(user.avatar!) : null,
+               backgroundColor: Colors.grey[800],
+               child: user.avatar == null ? const Icon(Icons.person, color: Colors.white) : null,
+             ),
            ),
          ),
          Positioned(
            bottom: -10,
-           child: Container(
-             padding: const EdgeInsets.all(2),
-             decoration: const BoxDecoration(
-               color: RhemaColors.gold,
-               shape: BoxShape.circle,
+           child: GestureDetector(
+             onTap: () {
+               ScaffoldMessenger.of(context).showSnackBar(
+                 SnackBar(
+                   content: Text('Seguindo @${user.handle}'),
+                   behavior: SnackBarBehavior.floating,
+                   duration: const Duration(seconds: 2),
+                 ),
+               );
+             },
+             child: Container(
+               padding: const EdgeInsets.all(2),
+               decoration: const BoxDecoration(
+                 color: RhemaColors.gold,
+                 shape: BoxShape.circle,
+               ),
+               child: const Icon(Icons.add, color: Colors.white, size: 14),
              ),
-             child: const Icon(Icons.add, color: Colors.white, size: 14),
            ),
          )
        ],
