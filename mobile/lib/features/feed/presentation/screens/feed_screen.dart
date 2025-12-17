@@ -254,6 +254,39 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                     ),
                   ),
                   
+                  const SizedBox(width: 8),
+                  
+                  // Botão Criar/Gravar Vídeo
+                  GestureDetector(
+                    onTap: () => context.push('/upload'),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [RhemaColors.gold, Color(0xFFD4A853)],
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: RhemaColors.gold.withOpacity(0.4),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.add,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  
                   // Tabs Centrais
                   Expanded(
                     child: Row(
