@@ -40,10 +40,9 @@ class _VideoCardState extends State<VideoCard> with TickerProviderStateMixin {
   VideoPlayerController? _videoController;
   bool _isInitialized = false;
   bool _showDoubleTapHeart = false;
-  
-  // Menu Radial State
   bool _isMenuOpen = false;
-  bool _isShareMenuOpen = false;
+  
+
 
   @override
   void initState() {
@@ -112,6 +111,36 @@ class _VideoCardState extends State<VideoCard> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  Widget _buildVideoPlayer() {
+    if (_isInitialized && _videoController != null) {
+      return SizedBox.expand(
+        child: FittedBox(
+          fit: BoxFit.cover,
+          child: SizedBox(
+            width: _videoController!.value.size.width,
+            height: _videoController!.value.size.height,
+            child: VideoPlayer(_videoController!),
+          ),
+        ),
+      );
+    }
+
+    if (widget.video.thumbnailUrl != null) {
+      return SizedBox.expand(
+        child: CachedNetworkImage(
+          imageUrl: widget.video.thumbnailUrl!,
+          fit: BoxFit.cover,
+          placeholder: (context, url) => const Center(
+            child: CircularProgressIndicator(color: Colors.white24),
+          ),
+          errorWidget: (context, url, error) => Container(color: Colors.black),
+        ),
+      );
+    }
+
+    return Container(color: Colors.black);
+  }
+
   void _handleDoubleTap() {
     if (!widget.video.isLiked) {
       widget.onLike();
@@ -124,16 +153,7 @@ class _VideoCardState extends State<VideoCard> with TickerProviderStateMixin {
     });
   }
   
-  void _toggleMenu() {
-    setState(() {
-      if (_isMenuOpen) {
-        _isMenuOpen = false;
-        _isShareMenuOpen = false;
-      } else {
-        _isMenuOpen = true;
-      }
-    });
-  }
+
 
   void _handleVerticalDragUpdate(DragUpdateDetails details) {
     // Implementar lógica de threshold se necessário
@@ -159,13 +179,7 @@ class _VideoCardState extends State<VideoCard> with TickerProviderStateMixin {
       behavior: HitTestBehavior.translucent, // Permite que PageView receba gestos
       onVerticalDragEnd: _handleVerticalDragEnd,
       onDoubleTap: _handleDoubleTap,
-      onTap: () {
-        if (_isMenuOpen) {
-           _toggleMenu();
-        } else {
-           widget.onTap();
-        }
-      },
+      onTap: widget.onTap,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -233,10 +247,7 @@ class _VideoCardState extends State<VideoCard> with TickerProviderStateMixin {
               children: [
                 // Text Info (Left)
                 Expanded(
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 300),
-                    opacity: _isMenuOpen ? 0.3 : 1.0,
-                    child: Column(
+                  child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -282,87 +293,44 @@ class _VideoCardState extends State<VideoCard> with TickerProviderStateMixin {
                       ],
                     ),
                   ),
-                ),
                 
-                // Radial Menu (Right)
-                SizedBox(
-                  width: 64,
-                  height: 200, // Area para os botões expandirem
-                  child: Stack(
-                     alignment: Alignment.bottomCenter,
-                     clipBehavior: Clip.none, // Permitir overflow se necessário
-                     children: [
-                        // --- Radial Buttons ---
-                        // Like (Top)
-                        _buildRadialButton(
-                           index: 0,
-                           offset: const Offset(0, -80),
-                           icon: widget.video.isLiked ? Icons.favorite : Icons.favorite_border,
-                           color: widget.video.isLiked ? Colors.red : Colors.white,
-                           onTap: widget.onLike,
-                           delay: 0,
-                        ),
-                        // Share (Top-Left diagonal approx) -> Using simplified vertical stack for Flutter Layout stability for now
-                        // Or implementing exact radial coordinates:
-                        // Share (Left-Top) [-45px, -65px]
-                        _buildRadialButton(
-                           index: 1,
-                           offset: const Offset(-45, -65),
-                           icon: Icons.share,
-                           onTap: () => setState(() => _isShareMenuOpen = true), // Should open sub-menu
-                           delay: 25,
-                           disabled: _isShareMenuOpen,
-                        ),
-                        // Follow (Left) [-70px, -35px]
-                        _buildRadialButton(
-                           index: 2,
-                           offset: const Offset(-70, -35),
-                           icon: Icons.person_add,
-                           onTap: () {
-                             // Toggle Follow Logic
-                           }, 
-                           delay: 50,
-                           disabled: _isShareMenuOpen,
-                        ),
-                        // Save (Bottom-Left) [-80px, 0]
-                        _buildRadialButton(
-                           index: 3,
-                           offset: const Offset(-80, 0),
-                           icon: Icons.bookmark_border,
-                           onTap: () {},
-                           delay: 75,
-                           disabled: _isShareMenuOpen,
-                        ),
-                        
-                        // Avatar Trigger (Main)
-                        Positioned(
-                          bottom: 0,
-                          child: GestureDetector(
-                            onTap: _toggleMenu,
-                            child: AnimatedScale(
-                               scale: _isMenuOpen ? 0.9 : 1.0,
-                               duration: const Duration(milliseconds: 300),
-                               child: Container(
-                                 decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                       color: _isMenuOpen ? RhemaColors.gold : Colors.white, 
-                                       width: _isMenuOpen ? 3 : 2
-                                    ),
-                                    boxShadow: [
-                                      if (_isMenuOpen) const BoxShadow(color: Colors.black26, blurRadius: 10)
-                                    ]
-                                 ),
-                                 child: CircleAvatar(
-                                    radius: 28,
-                                    backgroundImage: user.avatar != null ? CachedNetworkImageProvider(user.avatar!) : null,
-                                    child: user.avatar == null ? const Icon(Icons.person) : null,
-                                 ),
-                               ),
-                            ),
-                          ),
-                        ),
-                     ],
+                // Lateral Action Menu (Right)
+                Container(
+                  width: 60,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                       _buildAvatarButton(user),
+                       const SizedBox(height: 20),
+                       _buildSideActionButton(
+                         icon: widget.video.isLiked ? Icons.favorite : Icons.favorite_border,
+                         color: widget.video.isLiked ? Colors.red : Colors.white,
+                         label: _compactFormat(widget.video.likes),
+                         onTap: widget.onLike,
+                       ),
+                       const SizedBox(height: 16),
+                       _buildSideActionButton(
+                         icon: Icons.comment_rounded,
+                         label: _compactFormat(widget.video.comments),
+                         onTap: widget.onComment,
+                       ),
+                       const SizedBox(height: 16),
+                       _buildSideActionButton(
+                         icon: Icons.share_rounded,
+                         label: 'Comp.',
+                         onTap: widget.onShare,
+                         iconSize: 30, // Share icon slightly smaller visually depending on font
+                       ),
+                       const SizedBox(height: 16),
+                       _buildSideActionButton(
+                         icon: Icons.bookmark_border_rounded,
+                         label: 'Salvar',
+                         onTap: () {
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Salvo para ver depois!')));
+                         },
+                       ),
+                    ],
                   ),
                 ),
               ],
@@ -373,84 +341,78 @@ class _VideoCardState extends State<VideoCard> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildVideoPlayer() {
-     if (_isInitialized && _videoController != null) {
-        return SizedBox.expand(
-           child: FittedBox(
-             fit: BoxFit.cover,
-             child: SizedBox(
-               width: _videoController!.value.size.width,
-               height: _videoController!.value.size.height,
-               child: VideoPlayer(_videoController!),
-             ),
-           ),
-        );
-     }
-     if (widget.video.thumbnailUrl != null) {
-       return CachedNetworkImage(
-          imageUrl: widget.video.thumbnailUrl!,
-          fit: BoxFit.cover,
-          placeholder: (context, url) => Container(color: Colors.black),
-          errorWidget: (context, url, err) => Container(color: Colors.black),
-       );
-     }
-     return Container(color: Colors.black);
+  // Helper para formatar números (1.2k, 1M, etc)
+  String _compactFormat(int value) {
+    if (value >= 1000000) return '${(value / 1000000).toStringAsFixed(1)}M';
+    if (value >= 1000) return '${(value / 1000).toStringAsFixed(1)}k';
+    return value.toString();
   }
 
-  Widget _buildRadialButton({
-    required int index,
-    required Offset offset,
-    required IconData icon,
-    required VoidCallback onTap,
-    required int delay,
-    Color color = Colors.white,
-    bool disabled = false,
-  }) {
-      // Logic: If menu is closed, translate to 0 (hidden behind avatar)
-      // If menu is open, translate to offset.
-      final targetOffset = _isMenuOpen ? offset : Offset.zero;
-      final opacity = _isMenuOpen ? 1.0 : 0.0;
-      final scale = _isMenuOpen ? 1.0 : 0.5;
-      
-      return AnimatedPositioned(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutBack,
-        bottom: -targetOffset.dy, // Inverting Y because Stack bottom alignment
-        right: -targetOffset.dx,  // Inverting X because Stack is aligned but we want left relative
-        // Correction: Positioned relative to the stack center or bottom-center?
-        // Stack alignment is bottomCenter.
-        // Let's use left/bottom logic relative to the center of Avatar.
-        // If bottom=0 is avatar bottom.
-        // We want offset relative to the center.
-        // Let's rely on Transform.translate
-        
-        child: AnimatedContainer(
-           duration: Duration(milliseconds: 300 + delay),
-           curve: Curves.easeOutBack,
-           transform: Matrix4.translationValues(
-              _isMenuOpen ? offset.dx : 0, 
-              _isMenuOpen ? offset.dy : 0, 
-              0
-           )..scale(scale),
-           child: AnimatedOpacity(
-             duration: const Duration(milliseconds: 200),
-             opacity: opacity,
-             child: GestureDetector(
-               onTap: onTap,
-               child: Container(
-                 width: 40,
-                 height: 40,
-                 decoration: BoxDecoration(
-                   color: Colors.black45,
-                   shape: BoxShape.circle,
-                   border: Border.all(color: Colors.white24, width: 1),
-                   boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
-                 ),
-                 child: Icon(icon, color: color, size: 20),
-               ),
-             ),
+  Widget _buildAvatarButton(dynamic user) {
+     return Stack(
+       clipBehavior: Clip.none,
+       alignment: Alignment.bottomCenter,
+       children: [
+         Container(
+           padding: const EdgeInsets.all(1),
+           decoration: BoxDecoration(
+             color: Colors.white,
+             shape: BoxShape.circle,
            ),
-        )
-      );
+           child: CircleAvatar(
+             radius: 24,
+             backgroundImage: user.avatar != null ? CachedNetworkImageProvider(user.avatar!) : null,
+             backgroundColor: Colors.grey[800],
+             child: user.avatar == null ? const Icon(Icons.person, color: Colors.white) : null,
+           ),
+         ),
+         Positioned(
+           bottom: -10,
+           child: Container(
+             padding: const EdgeInsets.all(2),
+             decoration: const BoxDecoration(
+               color: RhemaColors.gold,
+               shape: BoxShape.circle,
+             ),
+             child: const Icon(Icons.add, color: Colors.white, size: 14),
+           ),
+         )
+       ],
+     );
+  }
+
+  Widget _buildSideActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    Color color = Colors.white,
+    double iconSize = 34,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: const [
+                 BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))
+              ]
+            ), 
+            child: Icon(icon, color: color, size: iconSize, shadows: const [Shadow(color: Colors.black45, blurRadius: 10)]) 
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              shadows: [Shadow(color: Colors.black45, blurRadius: 4)],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
